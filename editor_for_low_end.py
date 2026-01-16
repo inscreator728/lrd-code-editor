@@ -1,0 +1,3733 @@
+# lrd_code_editor_ultimate_optimized.py
+import sys
+import os
+import subprocess
+import re
+import webbrowser
+import shutil
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+
+# ==================== MODERN GAMER THEME CONSTANTS ====================
+
+MODERN_GAMER_THEME = {
+    # Modern Backgrounds with subtle gradients
+    'bg_dark': '#0c0c0c',
+    'bg_darker': '#090909',
+    'bg_black': '#000000',
+    'bg_surface': '#1a1010',
+    'bg_surface_dark': '#120909',
+    'bg_card': '#1a0f0f',
+    
+    # Primary Colors (Modern Reddish-Brown/JARVIS Theme)
+    'primary': '#ff3d00',  # Brighter modern red-orange
+    'primary_light': '#ff6d40',
+    'primary_dark': '#d32f00',
+    'primary_glow': '#ff5500',
+    'primary_gradient': 'qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ff3d00, stop:1 #ff6d40)',
+    
+    # Secondary Colors (Modern Hacker Green)
+    'secondary': '#00ff88',
+    'secondary_light': '#66ffaa',
+    'secondary_dark': '#00cc66',
+    'secondary_glow': '#00ff99',
+    'secondary_gradient': 'qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00ff88, stop:1 #66ffaa)',
+    
+    # Accent Colors
+    'accent': '#ff4081',
+    'accent_light': '#ff79b0',
+    'warning': '#ffb300',
+    'info': '#ff8a00',
+    'error': '#ff5252',
+    'success': '#00e676',
+    
+    # Text Colors
+    'text_primary': '#ff6d40',
+    'text_secondary': '#ff8a65',
+    'text_tertiary': '#ffa07a',
+    'text_editor': '#00ff88',
+    'text_terminal': '#00ffaa',
+    'text_disabled': '#666666',
+    
+    # UI Elements
+    'border': '#ff3d00',
+    'border_light': '#ff6d40',
+    'border_dark': '#d32f00',
+    'border_gradient': 'qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ff3d00, stop:1 #ff6d40)',
+    
+    # Selection & Highlight
+    'selection': '#441a1a',
+    'selection_light': '#662626',
+    'highlight': '#331a1a',
+    'hover': '#2a1a1a',
+    
+    # Line Numbers
+    'line_bg': '#1a0d0d',
+    'line_fg': '#ff6d40',
+    
+    # Status Colors
+    'status_ready': '#00ff88',
+    'status_modified': '#ffb300',
+    'status_error': '#ff5252',
+    'status_warning': '#ffb300',
+    'status_running': '#00b0ff',
+    
+    # Syntax Highlighting (Modern Hacker Theme)
+    'syntax_keyword': '#ff4081',
+    'syntax_builtin': '#ff8a00',
+    'syntax_string': '#ffb300',
+    'syntax_comment': '#888888',
+    'syntax_function': '#ff6d40',
+    'syntax_class': '#ff4081',
+    'syntax_number': '#ff9800',
+    'syntax_operator': '#ff8a65',
+    'syntax_tag': '#ff4081',
+    'syntax_attribute': '#ff9800',
+    'syntax_variable': '#ff6d40',
+    'syntax_import': '#00e5ff',
+}
+
+# ==================== MODERN OPTIMIZED STYLESHEET (Low-Performance Optimized) ====================
+
+MODERN_GAMER_STYLESHEET = f"""
+    /* Main Window - Modern Glass Effect (Simplified for Performance) */
+    QMainWindow {{
+        background-color: {MODERN_GAMER_THEME['bg_dark']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+    }}
+    
+    /* Menu Bar - Modern Gradient */
+    QMenuBar {{
+        background-color: {MODERN_GAMER_THEME['bg_surface_dark']};
+        color: #ffffff;
+        border-bottom: 1px solid {MODERN_GAMER_THEME['border']};
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        font-weight: bold;
+    }}
+    
+    QMenuBar::item {{
+        background-color: transparent;
+        padding: 6px 12px;
+        margin: 1px;
+    }}
+    
+    QMenuBar::item:selected {{
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }}
+    
+    /* Modern Menus */
+    QMenu {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        color: {MODERN_GAMER_THEME['text_primary']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        padding: 3px;
+    }}
+    
+    QMenu::item {{
+        padding: 6px 25px 6px 15px;
+        margin: 1px;
+    }}
+    
+    QMenu::item:selected {{
+        background-color: {MODERN_GAMER_THEME['selection']};
+        color: #ffffff;
+    }}
+    
+    QMenu::separator {{
+        height: 1px;
+        background-color: {MODERN_GAMER_THEME['border']};
+        margin: 3px 5px;
+    }}
+    
+    /* Status Bar - Modern */
+    QStatusBar {{
+        background-color: {MODERN_GAMER_THEME['bg_surface_dark']};
+        color: {MODERN_GAMER_THEME['text_secondary']};
+        border-top: 1px solid {MODERN_GAMER_THEME['border']};
+        font-family: 'Segoe UI', 'Consolas', monospace;
+    }}
+    
+    /* Modern Buttons */
+    QPushButton {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        color: {MODERN_GAMER_THEME['text_primary']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        padding: 6px 10px;
+        font-weight: bold;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        font-size: 11px;
+    }}
+    
+    QPushButton:hover {{
+        background-color: {MODERN_GAMER_THEME['selection']};
+        border: 1px solid {MODERN_GAMER_THEME['primary_light']};
+        color: #ffffff;
+    }}
+    
+    /* Modern ComboBox */
+    QComboBox {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        color: {MODERN_GAMER_THEME['text_primary']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        padding: 4px 6px;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        min-height: 20px;
+    }}
+    
+    QComboBox::drop-down {{
+        border: none;
+        width: 20px;
+    }}
+    
+    QComboBox::down-arrow {{
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 4px solid {MODERN_GAMER_THEME['primary']};
+    }}
+    
+    QComboBox QAbstractItemView {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        color: {MODERN_GAMER_THEME['text_primary']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        selection-background-color: {MODERN_GAMER_THEME['selection']};
+        selection-color: #ffffff;
+    }}
+    
+    /* Modern LineEdit */
+    QLineEdit {{
+        background-color: {MODERN_GAMER_THEME['bg_darker']};
+        color: {MODERN_GAMER_THEME['text_editor']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        padding: 6px 8px;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        font-size: 12px;
+        selection-background-color: {MODERN_GAMER_THEME['selection']};
+        selection-color: #ffffff;
+    }}
+    
+    QLineEdit:focus {{
+        border: 1px solid {MODERN_GAMER_THEME['secondary']};
+    }}
+    
+    /* Modern Tab Widget */
+    QTabWidget::pane {{
+        background-color: {MODERN_GAMER_THEME['bg_dark']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        top: -1px;
+    }}
+    
+    QTabBar::tab {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        color: {MODERN_GAMER_THEME['text_secondary']};
+        padding: 8px 15px;
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        border-bottom: none;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        font-weight: bold;
+        margin-right: 1px;
+        font-size: 11px;
+    }}
+    
+    QTabBar::tab:selected {{
+        background-color: {MODERN_GAMER_THEME['bg_dark']};
+        color: {MODERN_GAMER_THEME['primary']};
+        border-top: 2px solid {MODERN_GAMER_THEME['primary']};
+        font-size: 12px;
+    }}
+    
+    QTabBar::tab:hover {{
+        background-color: {MODERN_GAMER_THEME['selection_light']};
+        color: #ffffff;
+    }}
+    
+    /* Modern Dock Widget */
+    QDockWidget {{
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+    }}
+    
+    QDockWidget::title {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        color: #ffffff;
+        padding: 6px 10px;
+        font-weight: bold;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        border-bottom: 1px solid {MODERN_GAMER_THEME['border']};
+    }}
+    
+    /* Modern ScrollBar (Simplified) */
+    QScrollBar:vertical {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        width: 12px;
+        margin: 1px;
+    }}
+    
+    QScrollBar::handle:vertical {{
+        background-color: {MODERN_GAMER_THEME['primary']};
+        min-height: 20px;
+    }}
+    
+    QScrollBar:horizontal {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        height: 12px;
+        margin: 1px;
+    }}
+    
+    QScrollBar::handle:horizontal {{
+        background-color: {MODERN_GAMER_THEME['primary']};
+        min-width: 20px;
+    }}
+    
+    /* Modern TreeView (File Explorer) */
+    QTreeView {{
+        background-color: {MODERN_GAMER_THEME['bg_dark']};
+        color: {MODERN_GAMER_THEME['text_primary']};
+        border: none;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        font-size: 11px;
+    }}
+    
+    QTreeView::item {{
+        height: 24px;
+        padding: 3px 6px;
+    }}
+    
+    QTreeView::item:selected {{
+        background-color: {MODERN_GAMER_THEME['selection']};
+        color: #ffffff;
+        font-weight: bold;
+    }}
+    
+    /* Modern Labels */
+    QLabel {{
+        background-color: transparent;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+    }}
+    
+    /* Modern Text Edit */
+    QTextEdit {{
+        background-color: {MODERN_GAMER_THEME['bg_darker']};
+        color: {MODERN_GAMER_THEME['text_editor']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        font-size: 12px;
+        padding: 3px;
+        selection-background-color: {MODERN_GAMER_THEME['selection']};
+        selection-color: #ffffff;
+    }}
+    
+    /* Modern Checkbox */
+    QCheckBox {{
+        color: {MODERN_GAMER_THEME['text_primary']};
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        spacing: 6px;
+    }}
+    
+    QCheckBox::indicator {{
+        width: 14px;
+        height: 14px;
+    }}
+    
+    QCheckBox::indicator:checked {{
+        background-color: {MODERN_GAMER_THEME['primary']};
+        border: 1px solid {MODERN_GAMER_THEME['primary_light']};
+    }}
+    
+    QCheckBox::indicator:unchecked {{
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+    }}
+    
+    /* Modern Progress Bar */
+    QProgressBar {{
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        background-color: {MODERN_GAMER_THEME['bg_surface']};
+        color: {MODERN_GAMER_THEME['text_primary']};
+        font-family: 'Segoe UI', 'Consolas', monospace;
+    }}
+    
+    QProgressBar::chunk {{
+        background-color: {MODERN_GAMER_THEME['primary']};
+    }}
+    
+    /* Dialog */
+    QDialog {{
+        background-color: {MODERN_GAMER_THEME['bg_dark']};
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+    }}
+    
+    /* Sidebar Icons - ALWAYS VISIBLE */
+    QPushButton#sidebar_btn {{
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #ffffff;
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+        font-size: 14px;
+        font-family: 'Segoe UI', 'Consolas', monospace;
+        padding: 2px;
+        min-width: 30px;
+        min-height: 30px;
+    }}
+    
+    /* No hover effects for sidebar buttons */
+    QPushButton#sidebar_btn:hover {{
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #ffffff;
+        border: 1px solid {MODERN_GAMER_THEME['border']};
+    }}
+    
+    /* Performance optimizations */
+    * {{
+        border-radius: 0px !important; /* Remove rounded corners for performance */
+        outline: none;
+    }}
+"""
+
+# ==================== THREAD POOL FOR ASYNC OPERATIONS ====================
+
+class ThreadManager(QObject):
+    """Manages threads for non-blocking operations"""
+    output_signal = pyqtSignal(str)
+    finished_signal = pyqtSignal(str)
+    error_signal = pyqtSignal(str)
+    
+    def __init__(self):
+        super().__init__()
+        self.thread_pool = ThreadPoolExecutor(max_workers=2)  # Reduced for low-end systems
+        self.running_tasks = {}
+        self.task_counter = 0
+    
+    def run_command(self, command, cwd=None, task_name="Command"):
+        """Run a command in a separate thread"""
+        task_id = self.task_counter
+        self.task_counter += 1
+        
+        def worker():
+            try:
+                result = subprocess.run(
+                    command,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=cwd,
+                    timeout=30  # Reduced timeout
+                )
+                
+                if result.stdout:
+                    self.output_signal.emit(result.stdout)
+                if result.stderr:
+                    self.error_signal.emit(result.stderr)
+                
+                self.finished_signal.emit(f"{task_name} completed")
+                
+            except subprocess.TimeoutExpired:
+                self.error_signal.emit(f"{task_name} timed out after 30 seconds")
+            except Exception as e:
+                self.error_signal.emit(f"Error in {task_name}: {str(e)}")
+            finally:
+                if task_id in self.running_tasks:
+                    del self.running_tasks[task_id]
+        
+        # Run in thread pool
+        future = self.thread_pool.submit(worker)
+        self.running_tasks[task_id] = future
+        
+        return task_id
+    
+    def stop_all(self):
+        """Stop all running tasks"""
+        for future in self.running_tasks.values():
+            future.cancel()
+        self.running_tasks.clear()
+
+# ==================== OPTIMIZED SYNTAX HIGHLIGHTER (Low-Performance) ====================
+
+class LRDHighlighter(QSyntaxHighlighter):
+    def __init__(self, document, language='python'):
+        super().__init__(document)
+        self.language = language
+        self.rules = []
+        self.setup_rules()
+    
+    def set_language(self, language):
+        self.language = language
+        self.rules = []
+        self.setup_rules()
+        self.rehighlight()
+    
+    def setup_rules(self):
+        formats = {
+            'keyword': self.create_format(MODERN_GAMER_THEME['syntax_keyword'], bold=True),
+            'builtin': self.create_format(MODERN_GAMER_THEME['syntax_builtin']),
+            'string': self.create_format(MODERN_GAMER_THEME['syntax_string']),
+            'comment': self.create_format(MODERN_GAMER_THEME['syntax_comment'], italic=True),
+            'function': self.create_format(MODERN_GAMER_THEME['syntax_function'], bold=True),
+            'class': self.create_format(MODERN_GAMER_THEME['syntax_class'], bold=True),
+            'number': self.create_format(MODERN_GAMER_THEME['syntax_number']),
+            'operator': self.create_format(MODERN_GAMER_THEME['syntax_operator']),
+            'tag': self.create_format(MODERN_GAMER_THEME['syntax_tag'], bold=True),
+            'attribute': self.create_format(MODERN_GAMER_THEME['syntax_attribute']),
+            'variable': self.create_format(MODERN_GAMER_THEME['syntax_variable']),
+            'import': self.create_format(MODERN_GAMER_THEME['syntax_import']),
+            'sql_keyword': self.create_format('#ff4081', bold=True),
+            'sql_function': self.create_format('#ff6d40'),
+            'sql_type': self.create_format('#ff9800'),
+        }
+        
+        # Python
+        if self.language == 'python':
+            keywords = [
+                'and', 'as', 'assert', 'break', 'class', 'continue',
+                'def', 'del', 'elif', 'else', 'except', 'False',
+                'finally', 'for', 'from', 'global', 'if', 'import',
+                'in', 'is', 'lambda', 'None', 'nonlocal', 'not',
+                'or', 'pass', 'raise', 'return', 'True', 'try',
+                'while', 'with', 'yield', 'async', 'await'
+            ]
+            for kw in keywords:
+                self.rules.append((r'\b' + kw + r'\b', formats['keyword']))
+            
+            builtins = [
+                'print', 'len', 'range', 'str', 'int', 'float', 'list',
+                'dict', 'set', 'tuple', 'open', 'input', 'type', 'isinstance',
+                'enumerate', 'zip', 'map', 'filter', 'sorted', 'sum', 'min',
+                'max', 'abs', 'round', 'all', 'any', 'dir', 'help', 'super'
+            ]
+            for b in builtins:
+                self.rules.append((r'\b' + b + r'\b', formats['builtin']))
+            
+            self.rules.append((r'\bdef\s+(\w+)', formats['function']))
+            self.rules.append((r'\bclass\s+(\w+)', formats['class']))
+            self.rules.append((r'#.*', formats['comment']))
+            self.rules.append((r'"[^"\\]*(\\.[^"\\]*)*"', formats['string']))
+            self.rules.append((r"'[^'\\]*(\\.[^'\\]*)*'", formats['string']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+            self.rules.append((r'\bimport\s+\w+', formats['import']))
+            self.rules.append((r'\bfrom\s+\w+', formats['import']))
+        
+        # JavaScript
+        elif self.language == 'javascript':
+            js_keywords = [
+                'function', 'class', 'const', 'let', 'var', 'if', 'else',
+                'for', 'while', 'do', 'switch', 'case', 'break', 'continue',
+                'return', 'try', 'catch', 'finally', 'throw', 'new', 'this',
+                'super', 'extends', 'import', 'export', 'default', 'async',
+                'await', 'yield', 'typeof', 'instanceof', 'in', 'of', 'null',
+                'undefined', 'true', 'false'
+            ]
+            for kw in js_keywords:
+                self.rules.append((r'\b' + kw + r'\b', formats['keyword']))
+            
+            self.rules.append((r'\bfunction\s+(\w+)', formats['function']))
+            self.rules.append((r'\bclass\s+(\w+)', formats['class']))
+            self.rules.append((r'//.*', formats['comment']))
+            self.rules.append((r'/\*[\s\S]*?\*/', formats['comment']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'[^']*'", formats['string']))
+            self.rules.append((r'`[^`]*`', formats['string']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+        
+        # HTML
+        elif self.language == 'html':
+            self.rules.append((r'</?\w+', formats['tag']))
+            self.rules.append((r'\b\w+\s*=', formats['attribute']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'[^']*'", formats['string']))
+            self.rules.append((r'<!--.*-->', formats['comment']))
+        
+        # CSS
+        elif self.language == 'css':
+            self.rules.append((r'\b[\w-]+\s*:', formats['attribute']))
+            self.rules.append((r'/\*[\s\S]*?\*/', formats['comment']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'.*'", formats['string']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+        
+        # Java
+        elif self.language == 'java':
+            java_keywords = [
+                'public', 'private', 'protected', 'static', 'final', 'abstract',
+                'class', 'interface', 'extends', 'implements', 'import', 'package',
+                'new', 'return', 'if', 'else', 'for', 'while', 'do', 'switch',
+                'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw',
+                'throws', 'void', 'int', 'double', 'float', 'boolean', 'char',
+                'String', 'this', 'super', 'null', 'true', 'false'
+            ]
+            for kw in java_keywords:
+                self.rules.append((r'\b' + kw + r'\b', formats['keyword']))
+            
+            self.rules.append((r'\bclass\s+(\w+)', formats['class']))
+            self.rules.append((r'\binterface\s+(\w+)', formats['class']))
+            self.rules.append((r'//.*', formats['comment']))
+            self.rules.append((r'/\*[\s\S]*?\*/', formats['comment']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'.'", formats['string']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+            self.rules.append((r'\bimport\s+[\w.]+;', formats['import']))
+        
+        # PHP
+        elif self.language == 'php':
+            php_keywords = [
+                'echo', 'print', 'if', 'else', 'elseif', 'while', 'do', 'for',
+                'foreach', 'break', 'continue', 'switch', 'case', 'default',
+                'function', 'return', 'class', 'interface', 'trait', 'namespace',
+                'use', 'public', 'private', 'protected', 'static', 'abstract',
+                'final', 'const', 'new', 'clone', 'instanceof', 'try', 'catch',
+                'finally', 'throw', 'array', 'true', 'false', 'null', 'isset',
+                'empty', 'include', 'require', 'include_once', 'require_once'
+            ]
+            for kw in php_keywords:
+                self.rules.append((r'\b' + kw + r'\b', formats['keyword']))
+            
+            self.rules.append((r'\bfunction\s+(\w+)', formats['function']))
+            self.rules.append((r'\bclass\s+(\w+)', formats['class']))
+            self.rules.append((r'//.*', formats['comment']))
+            self.rules.append((r'#.*', formats['comment']))
+            self.rules.append((r'/\*[\s\S]*?\*/', formats['comment']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'[^']*'", formats['string']))
+            self.rules.append((r'\$\w+', formats['variable']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+        
+        # C/C++
+        elif self.language in ['c', 'cpp']:
+            cpp_keywords = [
+                'auto', 'break', 'case', 'char', 'const', 'continue', 'default',
+                'do', 'double', 'else', 'enum', 'extern', 'float', 'for', 'goto',
+                'if', 'int', 'long', 'register', 'return', 'short', 'signed',
+                'sizeof', 'static', 'struct', 'switch', 'typedef', 'union',
+                'unsigned', 'void', 'volatile', 'while', 'class', 'private',
+                'public', 'protected', 'template', 'new', 'delete', 'using',
+                'namespace', 'try', 'catch', 'throw', 'true', 'false', 'nullptr'
+            ]
+            for kw in cpp_keywords:
+                self.rules.append((r'\b' + kw + r'\b', formats['keyword']))
+            
+            self.rules.append((r'\bclass\s+(\w+)', formats['class']))
+            self.rules.append((r'\bstruct\s+(\w+)', formats['class']))
+            self.rules.append((r'//.*', formats['comment']))
+            self.rules.append((r'/\*[\s\S]*?\*/', formats['comment']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'.'", formats['string']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+            self.rules.append((r'#include\s+[<"][^>"]*[>"]', formats['import']))
+        
+        # Bash/Shell
+        elif self.language == 'bash':
+            bash_keywords = [
+                'if', 'then', 'else', 'elif', 'fi', 'case', 'esac', 'for',
+                'while', 'until', 'do', 'done', 'function', 'select', 'in'
+            ]
+            for kw in bash_keywords:
+                self.rules.append((r'\b' + kw + r'\b', formats['keyword']))
+            
+            self.rules.append((r'#.*', formats['comment']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'.*'", formats['string']))
+            self.rules.append((r'\$\w+', formats['variable']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+        
+        # SQL
+        elif self.language == 'sql':
+            sql_keywords = [
+                'SELECT', 'FROM', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'UPDATE',
+                'SET', 'DELETE', 'CREATE', 'TABLE', 'DROP', 'ALTER', 'ADD',
+                'COLUMN', 'DATABASE', 'INDEX', 'VIEW', 'TRIGGER', 'PROCEDURE',
+                'FUNCTION', 'GRANT', 'REVOKE', 'COMMIT', 'ROLLBACK', 'BEGIN',
+                'END', 'TRANSACTION', 'AND', 'OR', 'NOT', 'NULL', 'IS', 'IN',
+                'BETWEEN', 'LIKE', 'ORDER', 'BY', 'GROUP', 'HAVING', 'JOIN',
+                'INNER', 'LEFT', 'RIGHT', 'OUTER', 'UNION', 'ALL', 'DISTINCT',
+                'AS', 'ON', 'US', 'EXISTS', 'CASE', 'WHEN', 'THEN', 'ELSE',
+                'PRIMARY', 'KEY', 'FOREIGN', 'REFERENCES', 'UNIQUE', 'CHECK',
+                'DEFAULT', 'AUTO_INCREMENT', 'INT', 'VARCHAR', 'CHAR', 'TEXT',
+                'DATE', 'DATETIME', 'TIME', 'TIMESTAMP', 'DECIMAL', 'FLOAT',
+                'BOOLEAN', 'ENUM', 'SET', 'BLOB', 'JSON', 'XML'
+            ]
+            for kw in sql_keywords:
+                self.rules.append((r'\b' + kw + r'\b', formats['sql_keyword']))
+            
+            sql_functions = [
+                'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'UPPER', 'LOWER',
+                'SUBSTRING', 'CONCAT', 'LENGTH', 'ROUND', 'DATE_ADD',
+                'DATE_SUB', 'NOW', 'CURDATE', 'CURTIME', 'FORMAT',
+                'COALESCE', 'IFNULL', 'CAST', 'CONVERT'
+            ]
+            for func in sql_functions:
+                self.rules.append((r'\b' + func + r'\b', formats['sql_function']))
+            
+            self.rules.append((r'--.*', formats['comment']))
+            self.rules.append((r'/\*[\s\S]*?\*/', formats['comment']))
+            self.rules.append((r'"[^"]*"', formats['string']))
+            self.rules.append((r"'[^']*'", formats['string']))
+            self.rules.append((r'\b\d+\b', formats['number']))
+    
+    def create_format(self, color, bold=False, italic=False):
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor(color))
+        if bold:
+            fmt.setFontWeight(QFont.Weight.Bold)
+        if italic:
+            fmt.setFontItalic(True)
+        fmt.setFontFamily("'Segoe UI', 'Consolas', monospace")
+        return fmt
+    
+    def highlightBlock(self, text):
+        for pattern, fmt in self.rules:
+            for match in re.finditer(pattern, text, re.IGNORECASE):
+                start = match.start()
+                length = match.end() - start
+                self.setFormat(start, length, fmt)
+
+# ==================== OPTIMIZED CODE EDITOR (Low-Performance Optimized) ====================
+
+class LRDCustomEditor(QPlainTextEdit):
+    def __init__(self):
+        super().__init__()
+        self.line_number_area = LineNumberArea(self)
+        self.highlighter = LRDHighlighter(self.document())
+        
+        # Setup editor
+        self.setup_editor()
+        self.setup_signals()
+        
+        # Initial update
+        self.update_line_number_area_width()
+        self.highlight_current_line()
+    
+    def setup_editor(self):
+        # Font - Modern monospaced
+        font = QFont("'Segoe UI', 'Consolas', monospace", 11)  # Reduced font size
+        font.setStyleHint(QFont.StyleHint.Monospace)
+        self.setFont(font)
+        self.setTabStopDistance(30)  # Reduced tab distance
+        
+        # Colors and styling (Simplified)
+        self.setStyleSheet(f"""
+            QPlainTextEdit {{
+                background-color: {MODERN_GAMER_THEME['bg_darker']};
+                color: {MODERN_GAMER_THEME['text_editor']};
+                selection-background-color: {MODERN_GAMER_THEME['selection']};
+                selection-color: #ffffff;
+                border: 1px solid {MODERN_GAMER_THEME['border']};
+                font-family: 'Segoe UI', 'Consolas', monospace;
+                font-size: 11px;
+                padding: 5px;
+            }}
+        """)
+        
+        # Cursor
+        self.setCursorWidth(2)
+    
+    def setup_signals(self):
+        self.blockCountChanged.connect(self.update_line_number_area_width)
+        self.updateRequest.connect(self.update_line_number_area)
+        self.cursorPositionChanged.connect(self.highlight_current_line)
+    
+    def line_number_area_width(self):
+        digits = 1
+        count = max(1, self.blockCount())
+        while count >= 10:
+            count //= 10
+            digits += 1
+        return 10 + self.fontMetrics().horizontalAdvance('9') * digits
+    
+    def update_line_number_area_width(self):
+        self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
+    
+    def update_line_number_area(self, rect, dy):
+        if dy:
+            self.line_number_area.scroll(0, dy)
+        else:
+            self.line_number_area.update(0, rect.y(), 
+                                        self.line_number_area.width(), rect.height())
+    
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        cr = self.contentsRect()
+        width = self.line_number_area_width()
+        self.line_number_area.setGeometry(QRect(cr.left(), cr.top(), width, cr.height()))
+    
+    def line_number_area_paint_event(self, event):
+        painter = QPainter(self.line_number_area)
+        painter.fillRect(event.rect(), QColor(MODERN_GAMER_THEME['line_bg']))
+        
+        block = self.firstVisibleBlock()
+        block_number = block.blockNumber()
+        top = int(self.blockBoundingGeometry(block).translated(self.contentOffset()).top())
+        bottom = top + int(self.blockBoundingRect(block).height())
+        
+        while block.isValid() and top <= event.rect().bottom():
+            if block.isVisible() and bottom >= event.rect().top():
+                number = str(block_number + 1)
+                painter.setPen(QColor(MODERN_GAMER_THEME['line_fg']))
+                painter.setFont(QFont("'Segoe UI', 'Consolas', monospace", 10))
+                painter.drawText(0, top, self.line_number_area.width() - 4, 
+                                self.fontMetrics().height(),
+                                Qt.AlignmentFlag.AlignRight, number)
+            
+            block = block.next()
+            top = bottom
+            bottom = top + int(self.blockBoundingRect(block).height())
+            block_number += 1
+    
+    def highlight_current_line(self):
+        extra_selections = []
+        if not self.isReadOnly():
+            selection = QTextEdit.ExtraSelection()
+            line_color = QColor(MODERN_GAMER_THEME['selection_light'])
+            line_color.setAlpha(60)
+            selection.format.setBackground(line_color)
+            selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
+            selection.cursor = self.textCursor()
+            selection.cursor.clearSelection()
+            extra_selections.append(selection)
+        self.setExtraSelections(extra_selections)
+
+# ==================== LINE NUMBER AREA ====================
+
+class LineNumberArea(QWidget):
+    def __init__(self, editor):
+        super().__init__(editor)
+        self.editor = editor
+    
+    def sizeHint(self):
+        return QSize(self.editor.line_number_area_width(), 0)
+    
+    def paintEvent(self, event):
+        self.editor.line_number_area_paint_event(event)
+
+# ==================== ADVANCED TERMINAL (FULLY TYPEABLE) ====================
+
+class LRDTerminal(QTextEdit):
+    command_executed = pyqtSignal(str, str)
+    output_received = pyqtSignal(str)
+    error_received = pyqtSignal(str)
+    
+    def __init__(self):
+        super().__init__()
+        self.setup_terminal()
+        self.command_history = []
+        self.history_index = -1
+        self.current_dir = os.getcwd()
+        self.compiler_paths = self.detect_compilers()
+        self.thread_manager = ThreadManager()
+        
+        # Connect thread manager signals
+        self.thread_manager.output_signal.connect(self.append_output)
+        self.thread_manager.error_signal.connect(self.append_error)
+        self.thread_manager.finished_signal.connect(self.append_finished)
+        
+        # Show welcome message
+        self.append_welcome()
+    
+    def setup_terminal(self):
+        # Make it read-only for output, but we'll handle input separately
+        self.setReadOnly(True)
+        self.setFont(QFont("'Segoe UI', 'Consolas', monospace", 10))
+        
+        self.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {MODERN_GAMER_THEME['bg_black']};
+                color: {MODERN_GAMER_THEME['text_terminal']};
+                border: 1px solid {MODERN_GAMER_THEME['border']};
+                font-family: 'Segoe UI', 'Consolas', monospace;
+                font-size: 10px;
+                padding: 5px;
+            }}
+        """)
+    
+    def detect_compilers(self):
+        """Detect available compilers and interpreters"""
+        compilers = {}
+        
+        # Python
+        for cmd in ['python3', 'python']:
+            try:
+                subprocess.run([cmd, '--version'], capture_output=True, check=True, timeout=1)
+                compilers['python'] = cmd
+                break
+            except:
+                pass
+        
+        # Node.js
+        try:
+            subprocess.run(['node', '--version'], capture_output=True, check=True, timeout=1)
+            compilers['node'] = 'node'
+        except:
+            pass
+        
+        # PHP
+        try:
+            subprocess.run(['php', '--version'], capture_output=True, check=True, timeout=1)
+            compilers['php'] = 'php'
+        except:
+            pass
+        
+        # Java
+        try:
+            subprocess.run(['java', '-version'], capture_output=True, check=True, timeout=1)
+            compilers['java'] = 'java'
+            compilers['javac'] = 'javac'
+        except:
+            pass
+        
+        # GCC/G++
+        for cmd in ['gcc', 'g++']:
+            try:
+                subprocess.run([cmd, '--version'], capture_output=True, check=True, timeout=1)
+                compilers[cmd] = cmd
+            except:
+                pass
+        
+        # PowerShell (Windows)
+        try:
+            subprocess.run(['powershell', '-Command', 'echo test'], capture_output=True, check=True, timeout=1)
+            compilers['powershell'] = 'powershell'
+        except:
+            pass
+        
+        # SQLite
+        try:
+            subprocess.run(['sqlite3', '--version'], capture_output=True, check=True, timeout=1)
+            compilers['sqlite'] = 'sqlite3'
+        except:
+            pass
+        
+        return compilers
+    
+    def append_welcome(self):
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['primary']}; font-weight:bold;'>◢◤ LRD ADVANCED TERMINAL v4.0 ◥◣</span>")
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['secondary']}'>Directory:</span> {self.current_dir}")
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['secondary']}'>Type 'help' for commands, 'clear' to clear terminal</span>")
+        
+        # Show detected compilers
+        if self.compiler_paths:
+            compilers_list = ', '.join(self.compiler_paths.keys())
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['secondary']}'>Available compilers:</span> {compilers_list}")
+        
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['text_secondary']}'>Terminal is ALWAYS typeable - No file needs to be open!</span>")
+        self.append("")
+    
+    def execute_command(self, command: str):
+        if not command.strip():
+            return
+        
+        # Add to history
+        self.command_history.append(command)
+        self.history_index = len(self.command_history)
+        
+        # Show command
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['primary']}; font-weight:bold'>$</span> <span style='color:{MODERN_GAMER_THEME['text_editor']}'>{command}</span>")
+        
+        # Special commands
+        if command.lower() == 'clear':
+            self.clear()
+            self.append_welcome()
+            return
+        
+        if command.lower() == 'help':
+            self.show_help()
+            return
+        
+        if command.lower() == 'history':
+            self.show_history()
+            return
+        
+        if command.lower().startswith('cd '):
+            self.handle_cd(command)
+            return
+        
+        if command.lower() == 'pwd':
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['secondary']}'>{self.current_dir}</span>")
+            return
+        
+        if command.lower() in ['ls', 'dir']:
+            self.handle_ls()
+            return
+        
+        # SQL commands
+        if command.lower().startswith('sqlite'):
+            self.handle_sqlite(command)
+            return
+        
+        # Run command in thread
+        self.thread_manager.run_command(command, self.current_dir, f"Command: {command}")
+    
+    def handle_cd(self, command: str):
+        path = command[3:].strip()
+        try:
+            if not path:
+                return
+            
+            if path == "..":
+                os.chdir("..")
+            elif path == "~":
+                os.chdir(os.path.expanduser("~"))
+            elif os.path.isdir(path):
+                os.chdir(path)
+            else:
+                # Try relative path
+                new_path = os.path.join(self.current_dir, path)
+                if os.path.isdir(new_path):
+                    os.chdir(new_path)
+                else:
+                    self.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: Directory '{path}' not found</span>")
+                    return
+            
+            self.current_dir = os.getcwd()
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['success']}'>Directory changed to:</span> {self.current_dir}")
+        except Exception as e:
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: {str(e)}</span>")
+    
+    def handle_ls(self):
+        try:
+            items = os.listdir(self.current_dir)
+            files = []
+            dirs = []
+            
+            for item in items:
+                if os.path.isdir(os.path.join(self.current_dir, item)):
+                    dirs.append(f"<span style='color:{MODERN_GAMER_THEME['primary']}'>[DIR] {item}/</span>")
+                else:
+                    ext = os.path.splitext(item)[1].lower()
+                    if ext in ['.py', '.js', '.java', '.cpp', '.c', '.php', '.html', '.css', '.sh', '.sql']:
+                        files.append(f"<span style='color:{MODERN_GAMER_THEME['secondary']}'>[FILE] {item}</span>")
+                    else:
+                        files.append(f"<span style='color:{MODERN_GAMER_THEME['text_secondary']}'>[FILE] {item}</span>")
+            
+            # Display directories first
+            if dirs:
+                self.append("<br>".join(dirs))
+            if files:
+                self.append("<br>".join(files))
+            
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['text_tertiary']}'>{len(dirs)} directories, {len(files)} files</span>")
+            
+        except Exception as e:
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: {str(e)}</span>")
+    
+    def handle_sqlite(self, command: str):
+        """Handle SQLite commands"""
+        try:
+            if 'sqlite' not in self.compiler_paths:
+                self.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: SQLite not found</span>")
+                return
+            
+            # Extract database file and SQL query
+            parts = command.split(' ', 2)
+            if len(parts) < 3:
+                self.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Usage: sqlite database.db \"SQL query\"</span>")
+                return
+            
+            db_file = parts[1]
+            sql_query = parts[2].strip('"\'')
+            
+            # Execute SQLite command
+            cmd = f'{self.compiler_paths["sqlite"]} "{db_file}" "{sql_query}"'
+            self.thread_manager.run_command(cmd, self.current_dir, "SQLite query")
+            
+        except Exception as e:
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: {str(e)}</span>")
+    
+    def show_help(self):
+        help_text = f"""
+<span style='color:{MODERN_GAMER_THEME['primary']};'>◢ LRD TERMINAL HELP ◣</span><br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}; font-weight:bold'>Basic Commands:</span><br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>cd [dir]</span>          - Change directory<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>ls / dir</span>         - List files<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>pwd</span>              - Show current directory<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>clear</span>            - Clear terminal<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>history</span>          - Show command history<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>help</span>             - Show this help<br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}; font-weight:bold'>Code Execution:</span><br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>python script.py</span>  - Run Python<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>node script.js</span>    - Run JavaScript<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>php script.php</span>    - Run PHP<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>javac Main.java</span>   - Compile Java<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>java Main</span>         - Run Java<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>gcc program.c</span>     - Compile C<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>g++ program.cpp</span>   - Compile C++<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>./program</span>        - Run executable<br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}; font-weight:bold'>SQL Commands:</span><br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>sqlite db.db "SELECT * FROM table"</span> - Run SQL query<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>sqlite db.db ".tables"</span> - List tables<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>sqlite db.db ".schema"</span> - Show schema<br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}; font-weight:bold'>File Operations:</span><br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>mkdir folder</span>      - Create directory<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>rm file</span>          - Remove file<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>cp src dst</span>        - Copy file<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>mv src dst</span>        - Move/rename<br>
+  <span style='color:{MODERN_GAMER_THEME['text_editor']}'>cat file</span>         - View file content<br>
+"""
+        self.append(help_text)
+    
+    def show_history(self):
+        if not self.command_history:
+            self.append(f"<span style='color:{MODERN_GAMER_THEME['text_tertiary']}'>No command history</span>")
+            return
+        
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['secondary']}; font-weight:bold'>Command History:</span>")
+        for i, cmd in enumerate(self.command_history[-10:]):  # Show last 10 commands
+            self.append(f"  <span style='color:{MODERN_GAMER_THEME['text_primary']}'>{len(self.command_history)-10+i if len(self.command_history) > 10 else i}:</span> {cmd}")
+    
+    def get_previous_command(self):
+        if self.history_index > 0:
+            self.history_index -= 1
+            return self.command_history[self.history_index]
+        elif self.command_history:
+            self.history_index = 0
+            return self.command_history[0]
+        return ""
+    
+    def get_next_command(self):
+        if self.history_index < len(self.command_history) - 1:
+            self.history_index += 1
+            return self.command_history[self.history_index]
+        elif self.command_history:
+            self.history_index = len(self.command_history) - 1
+            return self.command_history[-1]
+        return ""
+    
+    def append_output(self, text):
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['text_editor']}'>{text}</span>")
+    
+    def append_error(self, text):
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>{text}</span>")
+    
+    def append_finished(self, text):
+        self.append(f"<span style='color:{MODERN_GAMER_THEME['success']}'>{text}</span>")
+    
+    def append(self, text: str):
+        cursor = self.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.setTextCursor(cursor)
+        
+        if "<" in text and ">" in text and ("span" in text or "br" in text):
+            self.insertHtml(text + "<br>")
+        else:
+            # Escape HTML and add as plain text
+            plain_text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            self.insertHtml(f"<span style='color:{MODERN_GAMER_THEME['text_editor']}'>{plain_text}</span><br>")
+        
+        # Scroll to bottom
+        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+
+# ==================== ENHANCED FILE EXPLORER ====================
+
+class LRDFileExplorer(QTreeView):
+    file_double_clicked = pyqtSignal(str)
+    folder_opened = pyqtSignal(str)
+    file_context_menu = pyqtSignal(str, QPoint)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setup_explorer()
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+        self.doubleClicked.connect(self.on_double_click)
+        self.deleted_files = {}  # Store deleted files for restore
+        self.trash_path = os.path.join(os.path.expanduser("~"), ".lrd_trash")
+        os.makedirs(self.trash_path, exist_ok=True)
+    
+    def setup_explorer(self):
+        self.model = QFileSystemModel()
+        self.model.setRootPath("")
+        self.model.setNameFilterDisables(False)
+        self.model.setNameFilters(["*.py", "*.js", "*.html", "*.css", "*.java", "*.cpp", "*.c", "*.php", "*.sh", "*.sql", "*.txt"])
+        self.setModel(self.model)
+        
+        # Hide unnecessary columns (size, type, modified date)
+        for i in range(1, 4):
+            self.hideColumn(i)
+        
+        self.setHeaderHidden(True)
+        
+        # Set custom icons
+        self.setIconSize(QSize(18, 18))
+        
+        # Apply theme
+        self.setStyleSheet(f"""
+            QTreeView {{
+                background-color: {MODERN_GAMER_THEME['bg_dark']};
+                color: {MODERN_GAMER_THEME['text_primary']};
+                border: 1px solid {MODERN_GAMER_THEME['border']};
+                font-family: 'Segoe UI', 'Consolas', monospace;
+                font-size: 11px;
+            }}
+            QTreeView::item {{
+                height: 22px;
+                padding: 3px 6px;
+            }}
+            QTreeView::item:selected {{
+                background-color: {MODERN_GAMER_THEME['selection']};
+                color: #ffffff;
+                font-weight: bold;
+            }}
+        """)
+    
+    def set_root_path(self, path: str):
+        self.model.setRootPath(path)
+        self.setRootIndex(self.model.index(path))
+    
+    def show_context_menu(self, position):
+        index = self.indexAt(position)
+        menu = QMenu()
+        
+        if index.isValid():
+            path = self.model.filePath(index)
+            is_dir = os.path.isdir(path)
+            
+            # Open file
+            if not is_dir:
+                open_action = QAction("📄 Open File", self)
+                open_action.triggered.connect(lambda: self.file_double_clicked.emit(path))
+                menu.addAction(open_action)
+                
+                # Open with default app
+                open_with_action = QAction("🔧 Open with Default App", self)
+                open_with_action.triggered.connect(lambda: self.open_with_default_app(path))
+                menu.addAction(open_with_action)
+            
+            # Open folder
+            if is_dir:
+                open_folder_action = QAction("📁 Open Folder", self)
+                open_folder_action.triggered.connect(lambda: self.folder_opened.emit(path))
+                menu.addAction(open_folder_action)
+            
+            menu.addSeparator()
+            
+            # Rename
+            rename_action = QAction("✏️ Rename", self)
+            rename_action.triggered.connect(lambda: self.rename_item(index))
+            menu.addAction(rename_action)
+            
+            # Delete to trash
+            delete_action = QAction("🗑️ Move to Trash", self)
+            delete_action.triggered.connect(lambda: self.delete_to_trash(path))
+            menu.addAction(delete_action)
+            
+            # Permanent delete
+            perm_delete_action = QAction("💀 Permanent Delete", self)
+            perm_delete_action.triggered.connect(lambda: self.permanent_delete(path))
+            menu.addAction(perm_delete_action)
+            
+            menu.addSeparator()
+            
+            # Copy path
+            copy_path_action = QAction("📋 Copy Path", self)
+            copy_path_action.triggered.connect(lambda: self.copy_path(path))
+            menu.addAction(copy_path_action)
+        
+        # Add create options
+        create_menu = QMenu("➕ Create New", self)
+        
+        new_file_action = QAction("📄 New File", self)
+        new_file_action.triggered.connect(lambda: self.create_new_file(position))
+        create_menu.addAction(new_file_action)
+        
+        new_folder_action = QAction("📁 New Folder", self)
+        new_folder_action.triggered.connect(lambda: self.create_new_folder(position))
+        create_menu.addAction(new_folder_action)
+        
+        menu.addMenu(create_menu)
+        
+        # Add trash management
+        trash_menu = QMenu("🗑️ Trash Management", self)
+        
+        restore_action = QAction("↩️ Restore Last Deleted", self)
+        restore_action.triggered.connect(self.restore_last_deleted)
+        trash_menu.addAction(restore_action)
+        
+        view_trash_action = QAction("👁️ View Trash", self)
+        view_trash_action.triggered.connect(self.view_trash)
+        trash_menu.addAction(view_trash_action)
+        
+        empty_trash_action = QAction("🧹 Empty Trash", self)
+        empty_trash_action.triggered.connect(self.empty_trash)
+        trash_menu.addAction(empty_trash_action)
+        
+        menu.addMenu(trash_menu)
+        
+        menu.addSeparator()
+        
+        # Refresh
+        refresh_action = QAction("🔄 Refresh", self)
+        refresh_action.triggered.connect(self.refresh)
+        menu.addAction(refresh_action)
+        
+        # Open in terminal
+        open_terminal_action = QAction("💻 Open in Terminal", self)
+        if index.isValid():
+            path = self.model.filePath(index) if os.path.isdir(self.model.filePath(index)) else os.path.dirname(self.model.filePath(index))
+        else:
+            path = self.model.rootPath() if self.model.rootPath() else os.getcwd()
+        open_terminal_action.triggered.connect(lambda: self.open_in_terminal(path))
+        menu.addAction(open_terminal_action)
+        
+        # Show properties
+        if index.isValid():
+            menu.addSeparator()
+            properties_action = QAction("📊 Properties", self)
+            properties_action.triggered.connect(lambda: self.show_properties(path))
+            menu.addAction(properties_action)
+        
+        menu.exec(self.viewport().mapToGlobal(position))
+    
+    def on_double_click(self, index):
+        if index.isValid():
+            path = self.model.filePath(index)
+            if os.path.isdir(path):
+                # Toggle expansion
+                if self.isExpanded(index):
+                    self.collapse(index)
+                else:
+                    self.expand(index)
+            else:
+                # Emit signal for file opening
+                self.file_double_clicked.emit(path)
+    
+    def delete_to_trash(self, path):
+        """Move file/folder to trash instead of permanent deletion"""
+        try:
+            if not os.path.exists(path):
+                return
+            
+            # Create unique name in trash
+            basename = os.path.basename(path)
+            trash_item_path = os.path.join(self.trash_path, basename)
+            
+            # If already exists, add timestamp
+            counter = 1
+            while os.path.exists(trash_item_path):
+                name, ext = os.path.splitext(basename)
+                trash_item_path = os.path.join(self.trash_path, f"{name}_{counter}{ext}")
+                counter += 1
+            
+            # Store original path for potential restore
+            self.deleted_files[trash_item_path] = path
+            
+            # Move to trash
+            shutil.move(path, trash_item_path)
+            
+            # Show notification
+            QMessageBox.information(self, "Moved to Trash", 
+                                  f"'{basename}' has been moved to trash.\nYou can restore it from Trash Management.")
+            
+            # Refresh explorer
+            self.refresh()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to move to trash: {str(e)}")
+    
+    def restore_last_deleted(self):
+        """Restore the last deleted file/folder"""
+        try:
+            if not self.deleted_files:
+                QMessageBox.information(self, "No Deleted Files", "No files to restore.")
+                return
+            
+            # Get the most recent deletion
+            trash_path, original_path = list(self.deleted_files.items())[-1]
+            
+            if not os.path.exists(trash_path):
+                QMessageBox.warning(self, "File Not Found", "The file no longer exists in trash.")
+                del self.deleted_files[trash_path]
+                return
+            
+            # Check if original location is occupied
+            if os.path.exists(original_path):
+                reply = QMessageBox.question(
+                    self,
+                    "File Exists",
+                    f"A file already exists at '{original_path}'. Overwrite?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                if reply == QMessageBox.StandardButton.No:
+                    return
+            
+            # Restore file
+            shutil.move(trash_path, original_path)
+            
+            # Remove from tracking
+            del self.deleted_files[trash_path]
+            
+            QMessageBox.information(self, "Restored", f"File restored to: {original_path}")
+            
+            # Refresh explorer
+            self.refresh()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to restore file: {str(e)}")
+    
+    def view_trash(self):
+        """Show contents of trash folder"""
+        try:
+            if not os.path.exists(self.trash_path):
+                QMessageBox.information(self, "Trash Empty", "The trash folder is empty.")
+                return
+            
+            items = os.listdir(self.trash_path)
+            if not items:
+                QMessageBox.information(self, "Trash Empty", "The trash folder is empty.")
+                return
+            
+            # Create dialog to show trash contents
+            dialog = QDialog(self)
+            dialog.setWindowTitle("🗑️ LRD Trash Contents")
+            dialog.setFixedSize(400, 300)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # List widget for trash items
+            list_widget = QListWidget()
+            
+            for item in items:
+                item_path = os.path.join(self.trash_path, item)
+                original_path = self.deleted_files.get(item_path, "Unknown")
+                list_item = QListWidgetItem(f"🗑️ {item} (from: {original_path})")
+                list_item.setData(Qt.ItemDataRole.UserRole, (item_path, original_path))
+                list_widget.addItem(list_item)
+            
+            # Buttons
+            button_layout = QHBoxLayout()
+            
+            restore_btn = QPushButton("↩️ Restore Selected")
+            delete_btn = QPushButton("💀 Delete Selected")
+            close_btn = QPushButton("❌ Close")
+            
+            restore_btn.clicked.connect(lambda: self.restore_selected_from_trash(list_widget))
+            delete_btn.clicked.connect(lambda: self.delete_selected_from_trash(list_widget))
+            close_btn.clicked.connect(dialog.close)
+            
+            button_layout.addWidget(restore_btn)
+            button_layout.addWidget(delete_btn)
+            button_layout.addWidget(close_btn)
+            
+            layout.addWidget(QLabel(f"🗑️ Trash contains {len(items)} item(s):"))
+            layout.addWidget(list_widget, 1)
+            layout.addLayout(button_layout)
+            
+            dialog.exec()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to view trash: {str(e)}")
+    
+    def restore_selected_from_trash(self, list_widget):
+        """Restore selected item from trash"""
+        current_item = list_widget.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "No Selection", "Please select an item to restore.")
+            return
+        
+        data = current_item.data(Qt.ItemDataRole.UserRole)
+        if not data:
+            return
+        
+        trash_path, original_path = data
+        
+        try:
+            # Check if original location is occupied
+            if os.path.exists(original_path):
+                reply = QMessageBox.question(
+                    self,
+                    "File Exists",
+                    f"A file already exists at '{original_path}'. Overwrite?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                if reply == QMessageBox.StandardButton.No:
+                    return
+            
+            # Restore file
+            shutil.move(trash_path, original_path)
+            
+            # Remove from tracking
+            if trash_path in self.deleted_files:
+                del self.deleted_files[trash_path]
+            
+            # Remove from list
+            list_widget.takeItem(list_widget.row(current_item))
+            
+            QMessageBox.information(self, "Restored", f"File restored to: {original_path}")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to restore file: {str(e)}")
+    
+    def delete_selected_from_trash(self, list_widget):
+        """Permanently delete selected item from trash"""
+        current_item = list_widget.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "No Selection", "Please select an item to delete.")
+            return
+        
+        data = current_item.data(Qt.ItemDataRole.UserRole)
+        if not data:
+            return
+        
+        trash_path, original_path = data
+        
+        reply = QMessageBox.question(
+            self,
+            "Permanent Delete",
+            f"Permanently delete '{os.path.basename(trash_path)}'?\nThis action cannot be undone!",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                # Remove file
+                if os.path.isdir(trash_path):
+                    shutil.rmtree(trash_path)
+                else:
+                    os.remove(trash_path)
+                
+                # Remove from tracking
+                if trash_path in self.deleted_files:
+                    del self.deleted_files[trash_path]
+                
+                # Remove from list
+                list_widget.takeItem(list_widget.row(current_item))
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to delete: {str(e)}")
+    
+    def empty_trash(self):
+        """Empty the entire trash folder"""
+        if not os.path.exists(self.trash_path):
+            QMessageBox.information(self, "Trash Empty", "The trash folder is already empty.")
+            return
+        
+        reply = QMessageBox.question(
+            self,
+            "Empty Trash",
+            "Permanently delete all items in trash?\nThis action cannot be undone!",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                # Remove all files in trash
+                for item in os.listdir(self.trash_path):
+                    item_path = os.path.join(self.trash_path, item)
+                    if os.path.isdir(item_path):
+                        shutil.rmtree(item_path)
+                    else:
+                        os.remove(item_path)
+                
+                # Clear tracking
+                self.deleted_files.clear()
+                
+                QMessageBox.information(self, "Trash Emptied", "All items have been permanently deleted.")
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to empty trash: {str(e)}")
+    
+    def permanent_delete(self, path):
+        """Permanently delete a file/folder"""
+        reply = QMessageBox.question(
+            self,
+            "Permanent Delete",
+            f"Permanently delete '{os.path.basename(path)}'?\nThis action cannot be undone!",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                else:
+                    os.remove(path)
+                self.refresh()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to delete: {str(e)}")
+    
+    def open_with_default_app(self, path):
+        """Open file with default system application"""
+        try:
+            if sys.platform == 'win32':
+                os.startfile(path)
+            elif sys.platform == 'darwin':
+                subprocess.run(['open', path], check=True)
+            else:
+                subprocess.run(['xdg-open', path], check=True)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to open file: {str(e)}")
+    
+    def rename_item(self, index):
+        self.edit(index)
+    
+    def copy_path(self, path):
+        clipboard = QApplication.clipboard()
+        clipboard.setText(path)
+        QMessageBox.information(self, "Copied", "File path copied to clipboard")
+    
+    def create_new_file(self, position):
+        index = self.indexAt(position)
+        if index.isValid():
+            path = self.model.filePath(index)
+            if os.path.isdir(path):
+                parent_dir = path
+            else:
+                parent_dir = os.path.dirname(path)
+        else:
+            parent_dir = self.model.rootPath() if self.model.rootPath() else os.getcwd()
+        
+        # Create new file dialog
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle("Create New File")
+        dialog.setLabelText("Enter filename:")
+        dialog.setTextValue("new_file.py")
+        
+        if dialog.exec():
+            filename = dialog.textValue()
+            if filename:
+                file_path = os.path.join(parent_dir, filename)
+                try:
+                    with open(file_path, 'w') as f:
+                        f.write("")
+                    self.refresh()
+                    # Select the new file
+                    new_index = self.model.index(file_path)
+                    self.setCurrentIndex(new_index)
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to create file: {str(e)}")
+    
+    def create_new_folder(self, position):
+        index = self.indexAt(position)
+        if index.isValid():
+            path = self.model.filePath(index)
+            if os.path.isdir(path):
+                parent_dir = path
+            else:
+                parent_dir = os.path.dirname(path)
+        else:
+            parent_dir = self.model.rootPath() if self.model.rootPath() else os.getcwd()
+        
+        # Create new folder dialog
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle("Create New Folder")
+        dialog.setLabelText("Enter folder name:")
+        dialog.setTextValue("New Folder")
+        
+        if dialog.exec():
+            foldername = dialog.textValue()
+            if foldername:
+                folder_path = os.path.join(parent_dir, foldername)
+                try:
+                    os.makedirs(folder_path, exist_ok=True)
+                    self.refresh()
+                    # Select the new folder
+                    new_index = self.model.index(folder_path)
+                    self.setCurrentIndex(new_index)
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to create folder: {str(e)}")
+    
+    def refresh(self):
+        self.model.setRootPath(self.model.rootPath())
+    
+    def open_in_terminal(self, path):
+        # This will be handled by the main window
+        return path
+    
+    def show_properties(self, path):
+        """Show file/folder properties"""
+        try:
+            stats = os.stat(path)
+            size = stats.st_size
+            modified = datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+            created = datetime.fromtimestamp(stats.st_ctime).strftime("%Y-%m-%d %H:%M:%S")
+            
+            is_dir = os.path.isdir(path)
+            item_type = "Directory" if is_dir else "File"
+            
+            # Count files if directory
+            if is_dir:
+                file_count = sum(1 for _ in os.listdir(path))
+                size_info = f"{file_count} items"
+            else:
+                # Convert size to human readable format
+                for unit in ['B', 'KB', 'MB', 'GB']:
+                    if size < 1024.0:
+                        size_info = f"{size:.2f} {unit}"
+                        break
+                    size /= 1024.0
+            
+            properties_text = f"""
+<span style='color:{MODERN_GAMER_THEME['primary']}; font-size:14px;'>📊 Properties</span><br><br>
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>Name:</span> {os.path.basename(path)}<br>
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>Type:</span> {item_type}<br>
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>Size:</span> {size_info}<br>
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>Location:</span> {os.path.dirname(path)}<br>
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>Created:</span> {created}<br>
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>Modified:</span> {modified}<br>
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>Permissions:</span> {oct(stats.st_mode)[-3:]}<br>
+"""
+            
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Properties")
+            dialog.setFixedSize(350, 250)
+            
+            layout = QVBoxLayout(dialog)
+            
+            text_edit = QTextEdit()
+            text_edit.setReadOnly(True)
+            text_edit.setHtml(properties_text)
+            
+            close_btn = QPushButton("Close")
+            close_btn.clicked.connect(dialog.close)
+            
+            layout.addWidget(text_edit)
+            layout.addWidget(close_btn)
+            
+            dialog.exec()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to get properties: {str(e)}")
+
+# ==================== MAIN WINDOW ====================
+
+class LRDCodeEditor(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.thread_manager = ThreadManager()
+        self.setup_window()
+        self.setup_variables()
+        self.setup_ui()
+        self.setup_menu()
+        self.setup_shortcuts()
+        
+        # Setup timers
+        self.setup_timers()
+        
+        # Create initial tab
+        self.create_new_file()
+        
+        # Focus on editor
+        QTimer.singleShot(100, self.focus_editor)
+    
+    def setup_window(self):
+        self.setWindowTitle("◢◤ LRD CODE EDITOR - MODERN GAMER EDITION ◥◣")
+        self.setGeometry(50, 50, 1200, 700)  # Smaller default size
+        
+        # Set window icon
+        self.set_window_icon()
+        
+        # Apply modern theme
+        self.setStyleSheet(MODERN_GAMER_STYLESHEET)
+    
+    def set_window_icon(self):
+        # Try to load tlogo.png from the same directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(script_dir, "tlogo.png")
+        
+        if os.path.exists(icon_path):
+            try:
+                self.setWindowIcon(QIcon(icon_path))
+                return
+            except:
+                pass
+        
+        # Fallback to generated icon
+        pixmap = QPixmap(48, 48)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # Disable antialiasing
+        
+        # Draw modern LRD gaming logo
+        painter.setPen(QPen(QColor(MODERN_GAMER_THEME['primary']), 2))
+        painter.setBrush(QColor(MODERN_GAMER_THEME['primary']))
+        painter.drawRect(8, 8, 32, 32)
+        
+        painter.setPen(QPen(QColor(MODERN_GAMER_THEME['secondary']), 1))
+        painter.setFont(QFont("'Segoe UI', 'Consolas', monospace", 12, QFont.Weight.Bold))
+        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "LRD")
+        
+        painter.end()
+        self.setWindowIcon(QIcon(pixmap))
+    
+    def setup_variables(self):
+        self.current_file = None
+        self.open_files = {}
+        self.project_path = None
+        self.font_size = 11
+        self.current_language = 'python'
+        self.theme = MODERN_GAMER_THEME
+        self.is_running = False
+        self.current_process = None
+        self.trash_path = os.path.join(os.path.expanduser("~"), ".lrd_trash")
+        os.makedirs(self.trash_path, exist_ok=True)
+    
+    def setup_ui(self):
+        # Main widget
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        
+        # Main layout
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(3)
+        
+        # Title bar
+        self.create_title_bar(main_layout)
+        
+        # Main content (sidebar + editor)
+        self.create_main_content(main_layout)
+        
+        # Terminal
+        self.create_terminal(main_layout)
+        
+        # Status bar
+        self.create_status_bar()
+    
+    def create_title_bar(self, parent_layout):
+        title_bar = QWidget()
+        title_bar.setFixedHeight(35)
+        
+        layout = QHBoxLayout(title_bar)
+        layout.setContentsMargins(10, 0, 10, 0)
+        
+        # Logo
+        try:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(script_dir, "tlogo.png")
+            if os.path.exists(icon_path):
+                logo_label = QLabel()
+                pixmap = QPixmap(icon_path).scaled(24, 24)
+                logo_label.setPixmap(pixmap)
+                layout.addWidget(logo_label)
+        except:
+            pass
+        
+        # Title
+        title = QLabel("◢◤ LRD CODE EDITOR - MODERN GAMER EDITION ◥◣")
+        title.setStyleSheet(f"""
+            font-size: 13px;
+            font-weight: bold;
+            color: {self.theme['primary']};
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            padding-left: 5px;
+        """)
+        
+        layout.addWidget(title)
+        layout.addStretch()
+        
+        # Status indicator
+        self.status_indicator = QLabel("● READY")
+        self.status_indicator.setStyleSheet(f"""
+            font-size: 10px;
+            font-weight: bold;
+            color: {self.theme['status_ready']};
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 8px;
+            border: 1px solid {self.theme['status_ready']};
+            font-family: 'Segoe UI', 'Consolas', monospace;
+        """)
+        
+        # Time display
+        self.time_display = QLabel("")
+        self.time_display.setStyleSheet(f"""
+            font-size: 11px;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: 'Segoe UI', 'Consolas', monospace;
+        """)
+        
+        layout.addWidget(self.status_indicator)
+        layout.addSpacing(5)
+        layout.addWidget(self.time_display)
+        
+        parent_layout.addWidget(title_bar)
+    
+    def create_main_content(self, parent_layout):
+        # Create splitter
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # Sidebar
+        self.create_sidebar()
+        
+        # Editor area
+        self.create_editor_area()
+        
+        parent_layout.addWidget(self.main_splitter, 1)
+    
+    def create_sidebar(self):
+        sidebar = QWidget()
+        sidebar.setMinimumWidth(200)
+        sidebar.setMaximumWidth(300)
+        
+        layout = QVBoxLayout(sidebar)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        
+        # Explorer header with icons
+        explorer_header = QWidget()
+        explorer_header.setFixedHeight(35)
+        explorer_header.setStyleSheet(f"""
+            QWidget {{
+                background: {self.theme['bg_surface_dark']};
+                border-bottom: 1px solid {self.theme['border']};
+            }}
+        """)
+        
+        header_layout = QHBoxLayout(explorer_header)
+        header_layout.setContentsMargins(10, 0, 10, 0)
+        
+        explorer_title = QLabel("📁 EXPLORER")
+        explorer_title.setStyleSheet(f"""
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 12px;
+            font-family: 'Segoe UI', 'Consolas', monospace;
+        """)
+        
+        # Buttons with icons - ALWAYS VISIBLE
+        buttons = [
+            ("📄", "New File", self.create_new_file_from_explorer),
+            ("📁", "New Folder", self.create_new_folder_from_explorer),
+            ("🗑️", "Delete Selected", self.delete_selected_from_explorer),
+            ("↩️", "Restore Last Deleted", self.restore_last_deleted_from_explorer),
+            ("📂", "Open Folder", self.open_folder),
+            ("🔄", "Refresh", self.refresh_explorer),
+        ]
+        
+        header_layout.addWidget(explorer_title)
+        header_layout.addStretch()
+        
+        for icon, tooltip, callback in buttons:
+            btn = self.create_sidebar_button(icon, tooltip)
+            btn.clicked.connect(callback)
+            header_layout.addWidget(btn)
+        
+        # File explorer
+        self.file_explorer = LRDFileExplorer()
+        self.file_explorer.file_double_clicked.connect(self.open_file)
+        self.file_explorer.folder_opened.connect(self.open_folder_path)
+        
+        layout.addWidget(explorer_header)
+        layout.addWidget(self.file_explorer)
+        
+        self.main_splitter.addWidget(sidebar)
+    
+    def create_sidebar_button(self, icon, tooltip):
+        btn = QPushButton(icon)
+        btn.setObjectName("sidebar_btn")  # Important for CSS targeting
+        btn.setFixedSize(28, 28)
+        btn.setToolTip(tooltip)
+        return btn
+    
+    def create_editor_area(self):
+        editor_area = QWidget()
+        
+        layout = QVBoxLayout(editor_area)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        
+        # Editor toolbar
+        self.create_editor_toolbar(layout)
+        
+        # Tab widget
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setTabsClosable(True)
+        self.tab_widget.tabCloseRequested.connect(self.close_tab)
+        self.tab_widget.currentChanged.connect(self.on_tab_changed)
+        self.tab_widget.setDocumentMode(True)
+        self.tab_widget.setMovable(True)
+        
+        layout.addWidget(self.tab_widget)
+        
+        self.main_splitter.addWidget(editor_area)
+        self.main_splitter.setSizes([200, 1000])
+    
+    def create_editor_toolbar(self, parent_layout):
+        toolbar = QWidget()
+        toolbar.setFixedHeight(40)
+        toolbar.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.theme['bg_surface_dark']};
+                border-bottom: 1px solid {self.theme['border']};
+            }}
+        """)
+        
+        layout = QHBoxLayout(toolbar)
+        layout.setContentsMargins(10, 0, 10, 0)
+        
+        # Action buttons with icons
+        actions = [
+            ("📝 NEW", self.create_new_file, "Ctrl+N"),
+            ("📂 OPEN", self.open_file_dialog, "Ctrl+O"),
+            ("💾 SAVE", self.save_file, "Ctrl+S"),
+            ("💾💾 SAVE ALL", self.save_all_files, "Ctrl+Shift+S"),
+            ("▶️ RUN", self.run_current_file_async, "F5"),
+            ("⏹️ STOP", self.stop_running_program, "Ctrl+."),
+        ]
+        
+        for text, callback, shortcut in actions:
+            btn = self.create_toolbar_button(f"{text}", shortcut)
+            btn.clicked.connect(callback)
+            layout.addWidget(btn)
+        
+        layout.addStretch()
+        
+        # Language selector
+        lang_label = QLabel("📝 LANGUAGE:")
+        lang_label.setStyleSheet(f"color: {self.theme['text_secondary']}; font-family: 'Segoe UI', 'Consolas', monospace; font-size: 10px;")
+        
+        self.language_combo = QComboBox()
+        self.language_combo.addItems([
+            "Python", "JavaScript", "HTML", "CSS", 
+            "Java", "C++", "C", "PHP", "Bash", "SQL", "Text"
+        ])
+        self.language_combo.setCurrentText("Python")
+        self.language_combo.currentTextChanged.connect(self.on_language_changed)
+        self.language_combo.setMinimumWidth(100)
+        
+        layout.addWidget(lang_label)
+        layout.addWidget(self.language_combo)
+        layout.addSpacing(10)
+        
+        # Font size
+        font_label = QLabel("🔤 FONT:")
+        font_label.setStyleSheet(f"color: {self.theme['text_secondary']}; font-family: 'Segoe UI', 'Consolas', monospace; font-size: 10px;")
+        
+        self.font_size_combo = QComboBox()
+        self.font_size_combo.addItems(["9", "10", "11", "12", "13", "14"])
+        self.font_size_combo.setCurrentText("11")
+        self.font_size_combo.currentTextChanged.connect(self.on_font_size_changed)
+        self.font_size_combo.setMinimumWidth(50)
+        
+        layout.addWidget(font_label)
+        layout.addWidget(self.font_size_combo)
+        
+        parent_layout.addWidget(toolbar)
+    
+    def create_toolbar_button(self, text, shortcut):
+        btn = QPushButton(f"{text}")
+        btn.setMinimumHeight(30)
+        btn.setToolTip(shortcut)
+        btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self.theme['bg_surface']};
+                color: {self.theme['text_primary']};
+                border: 1px solid {self.theme['border']};
+                padding: 5px 10px;
+                font-weight: bold;
+                min-width: 70px;
+                font-family: 'Segoe UI', 'Consolas', monospace;
+                font-size: 10px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.theme['selection']};
+                border: 1px solid {self.theme['primary_light']};
+                color: #ffffff;
+            }}
+        """)
+        return btn
+    
+    def create_terminal(self, parent_layout):
+        # Terminal widget
+        self.terminal = LRDTerminal()
+        
+        # Terminal input (ALWAYS TYPEABLE)
+        terminal_input_widget = QWidget()
+        terminal_input_widget.setFixedHeight(35)
+        terminal_input_widget.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.theme['bg_surface_dark']};
+                border-top: 1px solid {self.theme['border']};
+            }}
+        """)
+        
+        layout = QHBoxLayout(terminal_input_widget)
+        layout.setContentsMargins(10, 0, 10, 0)
+        
+        prompt = QLabel("💻 $")
+        prompt.setStyleSheet(f"""
+            color: {self.theme['primary']};
+            font-weight: bold;
+            font-size: 13px;
+            font-family: 'Segoe UI', 'Consolas', monospace;
+        """)
+        prompt.setFixedWidth(25)
+        
+        # Create custom line edit for terminal input
+        self.terminal_input = TerminalLineEdit(self.terminal)
+        self.terminal_input.setPlaceholderText("Type any command and press Enter (Up/Down for history)...")
+        self.terminal_input.returnPressed.connect(self.execute_terminal_command)
+        
+        # Buttons
+        clear_btn = QPushButton("🗑️ Clear")
+        clear_btn.setFixedWidth(70)
+        clear_btn.clicked.connect(lambda: self.terminal.execute_command("clear"))
+        
+        kill_btn = QPushButton("⏹️ Stop")
+        kill_btn.setFixedWidth(70)
+        kill_btn.clicked.connect(self.stop_terminal_process)
+        
+        layout.addWidget(prompt)
+        layout.addWidget(self.terminal_input, 1)
+        layout.addWidget(clear_btn)
+        layout.addWidget(kill_btn)
+        
+        # Terminal container
+        terminal_container = QWidget()
+        
+        terminal_layout = QVBoxLayout(terminal_container)
+        terminal_layout.setContentsMargins(0, 0, 0, 0)
+        terminal_layout.setSpacing(0)
+        
+        terminal_layout.addWidget(self.terminal, 1)
+        terminal_layout.addWidget(terminal_input_widget)
+        
+        # Create dock widget
+        self.terminal_dock = QDockWidget("💻 TERMINAL", self)
+        self.terminal_dock.setWidget(terminal_container)
+        self.terminal_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable | 
+            QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+        )
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.terminal_dock)
+        self.terminal_dock.setVisible(True)
+        
+        # Set focus to terminal input when terminal is shown
+        self.terminal_dock.visibilityChanged.connect(self.on_terminal_visibility_changed)
+    
+    def on_terminal_visibility_changed(self, visible):
+        if visible:
+            QTimer.singleShot(50, lambda: self.terminal_input.setFocus())
+    
+    def create_status_bar(self):
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        
+        # Status label
+        self.status_label = QLabel("● READY")
+        self.status_label.setStyleSheet(f"""
+            color: {self.theme['status_ready']};
+            font-weight: bold;
+            padding-right: 15px;
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            font-size: 10px;
+        """)
+        
+        # Cursor position
+        self.cursor_label = QLabel("📏 Ln 1, Col 1")
+        self.cursor_label.setStyleSheet(f"color: {self.theme['text_secondary']}; font-family: 'Segoe UI', 'Consolas', monospace; font-size: 9px;")
+        
+        # File info
+        self.file_label = QLabel("📄 Untitled")
+        self.file_label.setStyleSheet(f"color: {self.theme['text_secondary']}; font-family: 'Segoe UI', 'Consolas', monospace; font-size: 9px;")
+        
+        # Language
+        self.language_label = QLabel("🐍 Python")
+        self.language_label.setStyleSheet(f"color: {self.theme['text_secondary']}; font-family: 'Segoe UI', 'Consolas', monospace; font-size: 9px;")
+        
+        # Line count
+        self.line_count_label = QLabel("📊 Lines: 0")
+        self.line_count_label.setStyleSheet(f"color: {self.theme['text_secondary']}; font-family: 'Segoe UI', 'Consolas', monospace; font-size: 9px;")
+        
+        # Add widgets
+        self.status_bar.addWidget(self.status_label)
+        self.status_bar.addPermanentWidget(self.cursor_label)
+        self.status_bar.addPermanentWidget(self.file_label)
+        self.status_bar.addPermanentWidget(self.language_label)
+        self.status_bar.addPermanentWidget(self.line_count_label)
+    
+    def setup_menu(self):
+        menubar = self.menuBar()
+        
+        # File menu
+        file_menu = menubar.addMenu("📁 File")
+        
+        new_action = QAction("📝 New File", self)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(self.create_new_file)
+        file_menu.addAction(new_action)
+        
+        open_action = QAction("📂 Open File...", self)
+        open_action.setShortcut("Ctrl+O")
+        open_action.triggered.connect(self.open_file_dialog)
+        file_menu.addAction(open_action)
+        
+        open_folder_action = QAction("📁 Open Folder...", self)
+        open_folder_action.setShortcut("Ctrl+E")
+        open_folder_action.triggered.connect(self.open_folder)
+        file_menu.addAction(open_folder_action)
+        
+        file_menu.addSeparator()
+        
+        save_action = QAction("💾 Save", self)
+        save_action.setShortcut("Ctrl+S")
+        save_action.triggered.connect(self.save_file)
+        file_menu.addAction(save_action)
+        
+        save_as_action = QAction("💾 Save As...", self)
+        save_as_action.setShortcut("Ctrl+Shift+S")
+        save_as_action.triggered.connect(self.save_as)
+        file_menu.addAction(save_as_action)
+        
+        save_all_action = QAction("💾💾 Save All", self)
+        save_all_action.setShortcut("Ctrl+Alt+S")
+        save_all_action.triggered.connect(self.save_all_files)
+        file_menu.addAction(save_all_action)
+        
+        file_menu.addSeparator()
+        
+        # Trash management submenu
+        trash_menu = QMenu("🗑️ Trash Management", self)
+        
+        restore_action = QAction("↩️ Restore Last Deleted", self)
+        restore_action.triggered.connect(self.restore_last_deleted_from_explorer)
+        trash_menu.addAction(restore_action)
+        
+        view_trash_action = QAction("👁️ View Trash", self)
+        view_trash_action.triggered.connect(lambda: self.file_explorer.view_trash())
+        trash_menu.addAction(view_trash_action)
+        
+        empty_trash_action = QAction("🧹 Empty Trash", self)
+        empty_trash_action.triggered.connect(lambda: self.file_explorer.empty_trash())
+        trash_menu.addAction(empty_trash_action)
+        
+        file_menu.addMenu(trash_menu)
+        
+        file_menu.addSeparator()
+        
+        close_action = QAction("❌ Close Tab", self)
+        close_action.setShortcut("Ctrl+W")
+        close_action.triggered.connect(self.close_current_tab)
+        file_menu.addAction(close_action)
+        
+        close_all_action = QAction("❌ Close All", self)
+        close_all_action.triggered.connect(self.close_all_tabs)
+        file_menu.addAction(close_all_action)
+        
+        file_menu.addSeparator()
+        
+        exit_action = QAction("🚪 Exit", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+        
+        # Edit menu
+        edit_menu = menubar.addMenu("✏️ Edit")
+        
+        undo_action = QAction("↩️ Undo", self)
+        undo_action.setShortcut("Ctrl+Z")
+        undo_action.triggered.connect(self.undo)
+        edit_menu.addAction(undo_action)
+        
+        redo_action = QAction("↪️ Redo", self)
+        redo_action.setShortcut("Ctrl+Y")
+        redo_action.triggered.connect(self.redo)
+        edit_menu.addAction(redo_action)
+        
+        edit_menu.addSeparator()
+        
+        cut_action = QAction("✂️ Cut", self)
+        cut_action.setShortcut("Ctrl+X")
+        cut_action.triggered.connect(self.cut)
+        edit_menu.addAction(cut_action)
+        
+        copy_action = QAction("📋 Copy", self)
+        copy_action.setShortcut("Ctrl+C")
+        copy_action.triggered.connect(self.copy)
+        edit_menu.addAction(copy_action)
+        
+        paste_action = QAction("📝 Paste", self)
+        paste_action.setShortcut("Ctrl+V")
+        paste_action.triggered.connect(self.paste)
+        edit_menu.addAction(paste_action)
+        
+        select_all_action = QAction("📄 Select All", self)
+        select_all_action.setShortcut("Ctrl+A")
+        select_all_action.triggered.connect(self.select_all)
+        edit_menu.addAction(select_all_action)
+        
+        edit_menu.addSeparator()
+        
+        find_action = QAction("🔍 Find...", self)
+        find_action.setShortcut("Ctrl+F")
+        find_action.triggered.connect(self.find_text)
+        edit_menu.addAction(find_action)
+        
+        replace_action = QAction("🔄 Replace...", self)
+        replace_action.setShortcut("Ctrl+H")
+        replace_action.triggered.connect(self.replace_text)
+        edit_menu.addAction(replace_action)
+        
+        # Run menu
+        run_menu = menubar.addMenu("▶️ Run")
+        
+        run_action = QAction("▶️ Run Current File", self)
+        run_action.setShortcut("F5")
+        run_action.triggered.connect(self.run_current_file_async)
+        run_menu.addAction(run_action)
+        
+        run_selection_action = QAction("▶️ Run Selection", self)
+        run_selection_action.setShortcut("F6")
+        run_selection_action.triggered.connect(self.run_selection_async)
+        run_menu.addAction(run_selection_action)
+        
+        # SQL submenu
+        sql_menu = QMenu("🗃️ SQL Tools", self)
+        
+        sql_execute_action = QAction("🚀 Execute SQL", self)
+        sql_execute_action.setShortcut("F8")
+        sql_execute_action.triggered.connect(self.execute_sql)
+        sql_menu.addAction(sql_execute_action)
+        
+        sql_connect_action = QAction("🔌 Connect Database", self)
+        sql_connect_action.triggered.connect(self.connect_database)
+        sql_menu.addAction(sql_connect_action)
+        
+        sql_format_action = QAction("✨ Format SQL", self)
+        sql_format_action.triggered.connect(self.format_sql)
+        sql_menu.addAction(sql_format_action)
+        
+        run_menu.addMenu(sql_menu)
+        
+        run_menu.addSeparator()
+        
+        stop_action = QAction("⏹️ Stop Execution", self)
+        stop_action.setShortcut("Ctrl+.")
+        stop_action.triggered.connect(self.stop_running_program)
+        run_menu.addAction(stop_action)
+        
+        # View menu
+        view_menu = menubar.addMenu("👁️ View")
+        
+        toggle_sidebar_action = QAction("📁 Toggle Sidebar", self)
+        toggle_sidebar_action.setShortcut("Ctrl+B")
+        toggle_sidebar_action.triggered.connect(self.toggle_sidebar)
+        view_menu.addAction(toggle_sidebar_action)
+        
+        toggle_terminal_action = QAction("💻 Toggle Terminal", self)
+        toggle_terminal_action.setShortcut("Ctrl+`")
+        toggle_terminal_action.triggered.connect(self.toggle_terminal)
+        view_menu.addAction(toggle_terminal_action)
+        
+        view_menu.addSeparator()
+        
+        increase_font_action = QAction("🔤 Increase Font Size", self)
+        increase_font_action.setShortcut("Ctrl++")
+        increase_font_action.triggered.connect(self.increase_font_size)
+        view_menu.addAction(increase_font_action)
+        
+        decrease_font_action = QAction("🔤 Decrease Font Size", self)
+        decrease_font_action.setShortcut("Ctrl+-")
+        decrease_font_action.triggered.connect(self.decrease_font_size)
+        view_menu.addAction(decrease_font_action)
+        
+        # Tools menu
+        tools_menu = menubar.addMenu("⚙️ Tools")
+        
+        format_code_action = QAction("✨ Format Code", self)
+        format_code_action.setShortcut("Ctrl+Shift+F")
+        format_code_action.triggered.connect(self.format_code)
+        tools_menu.addAction(format_code_action)
+        
+        # Help menu
+        help_menu = menubar.addMenu("❓ Help")
+        
+        docs_action = QAction("📚 Documentation", self)
+        docs_action.triggered.connect(self.show_documentation)
+        help_menu.addAction(docs_action)
+        
+        shortcuts_action = QAction("⌨️ Keyboard Shortcuts", self)
+        shortcuts_action.triggered.connect(self.show_shortcuts)
+        help_menu.addAction(shortcuts_action)
+        
+        help_menu.addSeparator()
+        
+        about_action = QAction("ℹ️ About LRD", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+    
+    def setup_shortcuts(self):
+        # Tab navigation
+        QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
+        QShortcut(QKeySequence("Ctrl+Tab"), self, self.next_tab)
+        QShortcut(QKeySequence("Ctrl+Shift+Tab"), self, self.previous_tab)
+        QShortcut(QKeySequence("Ctrl+PageUp"), self, self.previous_tab)
+        QShortcut(QKeySequence("Ctrl+PageDown"), self, self.next_tab)
+        
+        # File operations
+        QShortcut(QKeySequence("Ctrl+E"), self, self.open_folder)
+        QShortcut(QKeySequence("Ctrl+Q"), self, self.close)
+        
+        # Editor operations
+        QShortcut(QKeySequence("Ctrl+F"), self, self.find_text)
+        QShortcut(QKeySequence("Ctrl+H"), self, self.replace_text)
+        QShortcut(QKeySequence("Ctrl+D"), self, self.duplicate_line)
+        QShortcut(QKeySequence("Ctrl+/"), self, self.toggle_comment)
+        QShortcut(QKeySequence("Ctrl+Shift+F"), self, self.format_code)
+        
+        # Run shortcuts
+        QShortcut(QKeySequence("F5"), self, self.run_current_file_async)
+        QShortcut(QKeySequence("F6"), self, self.run_selection_async)
+        QShortcut(QKeySequence("F8"), self, self.execute_sql)
+        QShortcut(QKeySequence("Ctrl+."), self, self.stop_running_program)
+        
+        # View shortcuts
+        QShortcut(QKeySequence("Ctrl+B"), self, self.toggle_sidebar)
+        QShortcut(QKeySequence("Ctrl+`"), self, self.toggle_terminal)
+        QShortcut(QKeySequence("Ctrl++"), self, self.increase_font_size)
+        QShortcut(QKeySequence("Ctrl+-"), self, self.decrease_font_size)
+    
+    def setup_timers(self):
+        # Clock timer
+        self.clock_timer = QTimer()
+        self.clock_timer.timeout.connect(self.update_clock)
+        self.clock_timer.start(1000)
+        self.update_clock()
+    
+    # ==================== ENHANCED FILE EXPLORER FUNCTIONS ====================
+    
+    def create_new_file_from_explorer(self):
+        # Get current directory from explorer
+        current_dir = self.file_explorer.model.rootPath() if self.file_explorer.model.rootPath() else os.getcwd()
+        
+        # Create new file dialog
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle("Create New File")
+        dialog.setLabelText("Enter filename:")
+        dialog.setTextValue("new_file.py")
+        
+        if dialog.exec():
+            filename = dialog.textValue()
+            if filename:
+                file_path = os.path.join(current_dir, filename)
+                try:
+                    with open(file_path, 'w') as f:
+                        f.write("")
+                    
+                    # Refresh explorer
+                    self.file_explorer.refresh()
+                    
+                    # Open the new file
+                    self.open_file(file_path)
+                    
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to create file: {str(e)}")
+    
+    def create_new_folder_from_explorer(self):
+        # Get current directory from explorer
+        current_dir = self.file_explorer.model.rootPath() if self.file_explorer.model.rootPath() else os.getcwd()
+        
+        # Create new folder dialog
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle("Create New Folder")
+        dialog.setLabelText("Enter folder name:")
+        dialog.setTextValue("New Folder")
+        
+        if dialog.exec():
+            foldername = dialog.textValue()
+            if foldername:
+                folder_path = os.path.join(current_dir, foldername)
+                try:
+                    os.makedirs(folder_path, exist_ok=True)
+                    
+                    # Refresh explorer
+                    self.file_explorer.refresh()
+                    
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to create folder: {str(e)}")
+    
+    def delete_selected_from_explorer(self):
+        """Delete currently selected file/folder from explorer"""
+        try:
+            # Get current selection
+            selection = self.file_explorer.selectedIndexes()
+            if not selection:
+                QMessageBox.information(self, "No Selection", "Please select a file or folder to delete.")
+                return
+            
+            index = selection[0]
+            path = self.file_explorer.model.filePath(index)
+            
+            # Ask for confirmation
+            reply = QMessageBox.question(
+                self,
+                "Move to Trash",
+                f"Move '{os.path.basename(path)}' to trash?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                self.file_explorer.delete_to_trash(path)
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to delete: {str(e)}")
+    
+    def restore_last_deleted_from_explorer(self):
+        """Restore the last deleted file/folder"""
+        self.file_explorer.restore_last_deleted()
+    
+    def open_folder_path(self, path):
+        """Open a specific folder path"""
+        if os.path.isdir(path):
+            self.project_path = path
+            self.file_explorer.set_root_path(path)
+            self.update_status(f"Opened folder: {os.path.basename(path)}", "ready")
+    
+    def open_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Open Folder")
+        if folder:
+            self.project_path = folder
+            self.file_explorer.set_root_path(folder)
+            self.update_status(f"Project: {os.path.basename(folder)}", "ready")
+            
+            # Change terminal directory
+            self.terminal.current_dir = folder
+            self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['success']}'>Terminal directory changed to: {folder}</span>")
+    
+    def refresh_explorer(self):
+        if self.project_path:
+            self.file_explorer.set_root_path(self.project_path)
+    
+    # ==================== EDITOR MANAGEMENT ====================
+    
+    def create_new_file(self):
+        editor = LRDCustomEditor()
+        index = self.tab_widget.addTab(editor, "📄 Untitled")
+        self.tab_widget.setCurrentIndex(index)
+        
+        # Store file info
+        self.open_files[editor] = {
+            'path': None,
+            'saved': False,
+            'modified': False,
+            'language': 'python'
+        }
+        
+        # Connect signals
+        editor.cursorPositionChanged.connect(lambda: self.update_cursor_position(editor))
+        editor.textChanged.connect(lambda: self.on_text_changed(editor))
+        
+        # Update status
+        self.update_status("New file created", "ready")
+        self.file_label.setText("📄 Untitled")
+        self.update_cursor_position(editor)
+        
+        return editor
+    
+    def focus_editor(self):
+        editor = self.get_current_editor()
+        if editor:
+            editor.setFocus()
+    
+    def open_file_dialog(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open File",
+            "",
+            "All Files (*.*);;"
+            "Python Files (*.py);;"
+            "JavaScript Files (*.js);;"
+            "HTML Files (*.html *.htm);;"
+            "CSS Files (*.css);;"
+            "Java Files (*.java);;"
+            "C++ Files (*.cpp);;"
+            "C Files (*.c);;"
+            "PHP Files (*.php);;"
+            "SQL Files (*.sql);;"
+            "Bash Files (*.sh);;"
+            "Text Files (*.txt)"
+        )
+        
+        if file_path:
+            self.open_file(file_path)
+    
+    def open_file(self, file_path: str):
+        # Check if file is already open
+        for editor, info in self.open_files.items():
+            if info['path'] == file_path:
+                index = self.tab_widget.indexOf(editor)
+                self.tab_widget.setCurrentIndex(index)
+                return
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Create editor
+            editor = LRDCustomEditor()
+            editor.setPlainText(content)
+            
+            # Add tab
+            filename = os.path.basename(file_path)
+            index = self.tab_widget.addTab(editor, f"📄 {filename}")
+            self.tab_widget.setCurrentIndex(index)
+            
+            # Store file info
+            self.open_files[editor] = {
+                'path': file_path,
+                'saved': True,
+                'modified': False,
+                'language': self.detect_language(file_path)
+            }
+            
+            # Connect signals
+            editor.cursorPositionChanged.connect(lambda: self.update_cursor_position(editor))
+            editor.textChanged.connect(lambda: self.on_text_changed(editor))
+            
+            # Set language
+            self.set_editor_language(editor, self.open_files[editor]['language'])
+            
+            # Update status
+            self.update_status(f"Opened: {filename}", "ready")
+            self.file_label.setText(f"📄 {filename}")
+            self.update_cursor_position(editor)
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to open file:\n{str(e)}")
+    
+    def save_file(self):
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        info = self.open_files.get(editor)
+        if not info:
+            return
+        
+        if info['path']:
+            # Save to existing file
+            try:
+                with open(info['path'], 'w', encoding='utf-8') as f:
+                    f.write(editor.toPlainText())
+                
+                info['saved'] = True
+                info['modified'] = False
+                
+                self.update_status(f"Saved: {os.path.basename(info['path'])}", "ready")
+                self.update_tab_title(editor)
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to save file:\n{str(e)}")
+        else:
+            # Save As dialog
+            self.save_as()
+    
+    def save_all_files(self):
+        for editor, info in self.open_files.items():
+            if info['modified'] and info['path']:
+                try:
+                    with open(info['path'], 'w', encoding='utf-8') as f:
+                        f.write(editor.toPlainText())
+                    info['saved'] = True
+                    info['modified'] = False
+                    self.update_tab_title(editor)
+                except:
+                    pass
+        
+        self.update_status("All files saved", "ready")
+    
+    def save_as(self):
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save As",
+            "",
+            "All Files (*.*);;"
+            "Python Files (*.py);;"
+            "JavaScript Files (*.js);;"
+            "HTML Files (*.html);;"
+            "CSS Files (*.css);;"
+            "Java Files (*.java);;"
+            "C++ Files (*.cpp);;"
+            "C Files (*.c);;"
+            "PHP Files (*.php);;"
+            "SQL Files (*.sql);;"
+            "Bash Files (*.sh);;"
+            "Text Files (*.txt)"
+        )
+        
+        if file_path:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(editor.toPlainText())
+                
+                # Update file info
+                info = self.open_files.get(editor)
+                if info:
+                    info['path'] = file_path
+                    info['saved'] = True
+                    info['modified'] = False
+                    info['language'] = self.detect_language(file_path)
+                
+                # Update tab and language
+                filename = os.path.basename(file_path)
+                index = self.tab_widget.indexOf(editor)
+                self.tab_widget.setTabText(index, f"📄 {filename}")
+                self.set_editor_language(editor, info['language'])
+                
+                # Update status
+                self.update_status(f"Saved as: {filename}", "ready")
+                self.file_label.setText(f"📄 {filename}")
+                
+                # Refresh explorer if in same directory
+                if self.project_path and file_path.startswith(self.project_path):
+                    self.file_explorer.refresh()
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to save file:\n{str(e)}")
+    
+    def close_tab(self, index):
+        widget = self.tab_widget.widget(index)
+        if isinstance(widget, LRDCustomEditor):
+            info = self.open_files.get(widget)
+            if info and info['modified']:
+                reply = QMessageBox.question(
+                    self,
+                    "Unsaved Changes",
+                    f"Save changes to {self.tab_widget.tabText(index)}?",
+                    QMessageBox.StandardButton.Save |
+                    QMessageBox.StandardButton.Discard |
+                    QMessageBox.StandardButton.Cancel
+                )
+                
+                if reply == QMessageBox.StandardButton.Save:
+                    self.save_file()
+                elif reply == QMessageBox.StandardButton.Cancel:
+                    return
+            
+            # Remove from open files
+            self.open_files.pop(widget, None)
+        
+        self.tab_widget.removeTab(index)
+        
+        # If no tabs left, create new file
+        if self.tab_widget.count() == 0:
+            self.create_new_file()
+    
+    def close_all_tabs(self):
+        while self.tab_widget.count() > 0:
+            self.close_tab(0)
+    
+    def close_current_tab(self):
+        current_index = self.tab_widget.currentIndex()
+        if current_index >= 0:
+            self.close_tab(current_index)
+    
+    def next_tab(self):
+        current = self.tab_widget.currentIndex()
+        next_index = (current + 1) % self.tab_widget.count()
+        self.tab_widget.setCurrentIndex(next_index)
+    
+    def previous_tab(self):
+        current = self.tab_widget.currentIndex()
+        previous_index = (current - 1) % self.tab_widget.count()
+        self.tab_widget.setCurrentIndex(previous_index)
+    
+    def on_tab_changed(self, index):
+        if index >= 0:
+            widget = self.tab_widget.widget(index)
+            if isinstance(widget, LRDCustomEditor):
+                info = self.open_files.get(widget)
+                if info:
+                    # Update file label
+                    if info['path']:
+                        self.file_label.setText(f"📄 {os.path.basename(info['path'])}")
+                    else:
+                        self.file_label.setText("📄 Untitled")
+                    
+                    # Update language
+                    self.language_label.setText(f"🐍 {info['language'].capitalize()}")
+                    self.language_combo.setCurrentText(info['language'].capitalize())
+                    
+                    # Update cursor position
+                    self.update_cursor_position(widget)
+                    
+                    # Focus the editor
+                    widget.setFocus()
+    
+    def update_tab_title(self, editor):
+        info = self.open_files.get(editor)
+        if info:
+            index = self.tab_widget.indexOf(editor)
+            filename = os.path.basename(info['path']) if info['path'] else "Untitled"
+            if info['modified']:
+                self.tab_widget.setTabText(index, f"*📄 {filename}")
+            else:
+                self.tab_widget.setTabText(index, f"📄 {filename}")
+    
+    # ==================== TEXT OPERATIONS ====================
+    
+    def on_text_changed(self, editor):
+        info = self.open_files.get(editor)
+        if info:
+            info['modified'] = True
+            self.update_tab_title(editor)
+            self.update_line_count(editor)
+    
+    def update_cursor_position(self, editor=None):
+        if not editor:
+            editor = self.get_current_editor()
+        
+        if editor:
+            cursor = editor.textCursor()
+            line = cursor.blockNumber() + 1
+            col = cursor.columnNumber() + 1
+            self.cursor_label.setText(f"📏 Ln {line}, Col {col}")
+            
+            # Update line count
+            self.update_line_count(editor)
+    
+    def update_line_count(self, editor):
+        if editor:
+            line_count = editor.document().blockCount()
+            self.line_count_label.setText(f"📊 Lines: {line_count}")
+    
+    def undo(self):
+        editor = self.get_current_editor()
+        if editor:
+            editor.undo()
+    
+    def redo(self):
+        editor = self.get_current_editor()
+        if editor:
+            editor.redo()
+    
+    def cut(self):
+        editor = self.get_current_editor()
+        if editor:
+            editor.cut()
+    
+    def copy(self):
+        editor = self.get_current_editor()
+        if editor:
+            editor.copy()
+    
+    def paste(self):
+        editor = self.get_current_editor()
+        if editor:
+            editor.paste()
+    
+    def select_all(self):
+        editor = self.get_current_editor()
+        if editor:
+            editor.selectAll()
+    
+    def find_text(self):
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        # Simple find dialog
+        text, ok = QInputDialog.getText(self, "Find", "Find:")
+        if ok and text:
+            cursor = editor.textCursor()
+            found = editor.find(text)
+            if not found:
+                QMessageBox.information(self, "Find", f"Text '{text}' not found.")
+    
+    def replace_text(self):
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        # Simple replace dialog
+        find_text, ok1 = QInputDialog.getText(self, "Find", "Find:")
+        if ok1 and find_text:
+            replace_text, ok2 = QInputDialog.getText(self, "Replace", "Replace with:")
+            if ok2:
+                # Replace all
+                all_text = editor.toPlainText()
+                new_text = all_text.replace(find_text, replace_text)
+                editor.setPlainText(new_text)
+    
+    def duplicate_line(self):
+        editor = self.get_current_editor()
+        if editor:
+            cursor = editor.textCursor()
+            cursor.select(QTextCursor.SelectionType.LineUnderCursor)
+            text = cursor.selectedText()
+            cursor.insertText(text + "\n" + text)
+    
+    def toggle_comment(self):
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        info = self.open_files.get(editor)
+        if not info:
+            return
+        
+        cursor = editor.textCursor()
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+        
+        cursor.setPosition(start)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+        start_line = cursor.blockNumber()
+        
+        cursor.setPosition(end)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+        end_line = cursor.blockNumber()
+        
+        # Get comment style based on language
+        comment_style = "#"
+        if info['language'] in ['javascript', 'java', 'c', 'cpp', 'sql']:
+            comment_style = "//"
+        elif info['language'] == 'html':
+            comment_style = "<!--"
+        elif info['language'] == 'css':
+            comment_style = "/*"
+        
+        cursor.setPosition(start)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+        
+        # Check if first line is commented
+        first_line = cursor.block().text()
+        is_commented = first_line.lstrip().startswith(comment_style)
+        
+        cursor.beginEditBlock()
+        
+        for i in range(start_line, end_line + 1):
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+            line_text = cursor.block().text()
+            
+            if is_commented:
+                # Uncomment
+                if line_text.lstrip().startswith(comment_style):
+                    # Find the comment
+                    uncommented = line_text.replace(comment_style, "", 1)
+                    cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+                    cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.MoveMode.KeepAnchor)
+                    cursor.insertText(uncommented)
+            else:
+                # Comment
+                indent = len(line_text) - len(line_text.lstrip())
+                commented = line_text[:indent] + comment_style + " " + line_text[indent:]
+                cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+                cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.MoveMode.KeepAnchor)
+                cursor.insertText(commented)
+            
+            cursor.movePosition(QTextCursor.MoveOperation.Down)
+        
+        cursor.endEditBlock()
+    
+    def format_code(self):
+        """Format code (basic indentation)"""
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        cursor = editor.textCursor()
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+        
+        if start == end:
+            # Format entire document
+            text = editor.toPlainText()
+            lines = text.split('\n')
+            formatted_lines = []
+            
+            for line in lines:
+                stripped = line.lstrip()
+                indent = len(line) - len(stripped)
+                formatted_lines.append(line)
+            
+            editor.setPlainText('\n'.join(formatted_lines))
+        else:
+            # Format selected text
+            cursor.beginEditBlock()
+            
+            start_line = editor.document().findBlock(start).blockNumber()
+            end_line = editor.document().findBlock(end).blockNumber()
+            
+            for i in range(start_line, end_line + 1):
+                block = editor.document().findBlockByNumber(i)
+                cursor.setPosition(block.position())
+                cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.MoveMode.KeepAnchor)
+                text = cursor.selectedText()
+                cursor.removeSelectedText()
+                cursor.insertText(text.lstrip())
+            
+            cursor.endEditBlock()
+        
+        self.update_status("Code formatted", "ready")
+    
+    def format_sql(self):
+        """Format SQL code"""
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        info = self.open_files.get(editor)
+        if not info or info['language'] != 'sql':
+            QMessageBox.warning(self, "Not SQL", "Current file is not a SQL file.")
+            return
+        
+        text = editor.toPlainText()
+        
+        # Basic SQL formatting
+        keywords = [
+            'SELECT', 'FROM', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'UPDATE',
+            'SET', 'DELETE', 'CREATE', 'TABLE', 'DROP', 'ALTER', 'ADD',
+            'COLUMN', 'DATABASE', 'INDEX', 'VIEW', 'TRIGGER', 'PROCEDURE',
+            'FUNCTION', 'GRANT', 'REVOKE', 'COMMIT', 'ROLLBACK', 'BEGIN',
+            'END', 'TRANSACTION', 'AND', 'OR', 'NOT', 'NULL', 'IS', 'IN',
+            'BETWEEN', 'LIKE', 'ORDER', 'BY', 'GROUP', 'HAVING', 'JOIN',
+            'INNER', 'LEFT', 'RIGHT', 'OUTER', 'UNION', 'ALL', 'DISTINCT',
+            'AS', 'ON', 'US', 'EXISTS', 'CASE', 'WHEN', 'THEN', 'ELSE'
+        ]
+        
+        # Simple formatting: uppercase keywords
+        formatted = text.upper()
+        for kw in keywords:
+            formatted = re.sub(r'\b' + kw.lower() + r'\b', kw, formatted, flags=re.IGNORECASE)
+        
+        editor.setPlainText(formatted.strip())
+        self.update_status("SQL formatted", "ready")
+    
+    # ==================== LANGUAGE & SYNTAX ====================
+    
+    def detect_language(self, file_path: str) -> str:
+        ext = os.path.splitext(file_path)[1].lower()
+        
+        language_map = {
+            '.py': 'python',
+            '.js': 'javascript',
+            '.html': 'html',
+            '.htm': 'html',
+            '.css': 'css',
+            '.java': 'java',
+            '.cpp': 'cpp',
+            '.cc': 'cpp',
+            '.cxx': 'cpp',
+            '.c': 'c',
+            '.php': 'php',
+            '.sql': 'sql',
+            '.sh': 'bash',
+            '.bash': 'bash',
+            '.txt': 'text',
+        }
+        
+        return language_map.get(ext, 'text')
+    
+    def set_editor_language(self, editor, language):
+        if isinstance(editor, LRDCustomEditor):
+            editor.highlighter.set_language(language)
+            # Update language label with icon
+            icons = {
+                'python': '🐍',
+                'javascript': '📜',
+                'html': '🌐',
+                'css': '🎨',
+                'java': '☕',
+                'cpp': '⚡',
+                'c': '🔧',
+                'php': '🐘',
+                'sql': '🗃️',
+                'bash': '💻',
+                'text': '📄'
+            }
+            icon = icons.get(language, '📄')
+            self.language_label.setText(f"{icon} {language.capitalize()}")
+            self.language_combo.setCurrentText(language.capitalize())
+    
+    def on_language_changed(self, language):
+        editor = self.get_current_editor()
+        if editor:
+            lang_lower = language.lower()
+            self.open_files[editor]['language'] = lang_lower
+            self.set_editor_language(editor, lang_lower)
+    
+    # ==================== TERMINAL ====================
+    
+    def execute_terminal_command(self):
+        command = self.terminal_input.text().strip()
+        if command:
+            self.terminal.execute_command(command)
+            self.terminal_input.clear()
+            # Keep focus on terminal input
+            QTimer.singleShot(50, lambda: self.terminal_input.setFocus())
+    
+    def stop_terminal_process(self):
+        """Stop the currently running terminal process"""
+        self.terminal.thread_manager.stop_all()
+        self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['warning']}'>All processes stopped</span>")
+        self.update_status("Processes stopped", "warning")
+    
+    # ==================== SQL FUNCTIONS ====================
+    
+    def execute_sql(self):
+        """Execute SQL code"""
+        editor = self.get_current_editor()
+        if not editor:
+            QMessageBox.warning(self, "Warning", "No file open to execute.")
+            return
+        
+        info = self.open_files.get(editor)
+        if not info or info['language'] != 'sql':
+            QMessageBox.warning(self, "Not SQL", "Current file is not a SQL file.")
+            return
+        
+        # Check if SQLite is available
+        if 'sqlite' not in self.terminal.compiler_paths:
+            QMessageBox.warning(self, "SQLite Not Found", 
+                              "SQLite is not installed or not in PATH.\nPlease install SQLite to execute SQL files.")
+            return
+        
+        # Ask for database file
+        db_file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select SQLite Database",
+            "",
+            "SQLite Databases (*.db *.sqlite *.sqlite3);;All Files (*.*)"
+        )
+        
+        if not db_file:
+            return
+        
+        # Get SQL content
+        sql_content = editor.toPlainText()
+        
+        # Clear terminal and show running message
+        self.terminal.clear()
+        self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['primary']}; font-weight:bold'>◢ Executing SQL on: {os.path.basename(db_file)} ◣</span>")
+        self.terminal.append("")
+        
+        # Create temporary file with SQL
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+            f.write(sql_content)
+            temp_sql_file = f.name
+        
+        # Execute SQL
+        cmd = f'{self.terminal.compiler_paths["sqlite"]} "{db_file}" ".read {temp_sql_file}"'
+        self.terminal.thread_manager.run_command(cmd, os.path.dirname(db_file), "SQL execution")
+        
+        # Clean up
+        os.unlink(temp_sql_file)
+    
+    def connect_database(self):
+        """Connect to a database"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("🗃️ Connect to Database")
+        dialog.setFixedSize(400, 200)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Database type
+        type_label = QLabel("Database Type:")
+        type_combo = QComboBox()
+        type_combo.addItems(["SQLite", "MySQL", "PostgreSQL", "SQL Server"])
+        
+        # Connection details
+        host_label = QLabel("Host/File:")
+        host_input = QLineEdit()
+        host_input.setPlaceholderText("For SQLite: database file path")
+        
+        # Buttons
+        button_box = QDialogButtonBox()
+        connect_btn = button_box.addButton("Connect", QDialogButtonBox.ButtonRole.AcceptRole)
+        cancel_btn = button_box.addButton("Cancel", QDialogButtonBox.ButtonRole.RejectRole)
+        
+        layout.addWidget(type_label)
+        layout.addWidget(type_combo)
+        layout.addWidget(host_label)
+        layout.addWidget(host_input)
+        layout.addStretch()
+        layout.addWidget(button_box)
+        
+        def connect():
+            db_type = type_combo.currentText()
+            host = host_input.text()
+            
+            if db_type == "SQLite":
+                if not os.path.exists(host):
+                    QMessageBox.warning(dialog, "File Not Found", "SQLite database file not found.")
+                    return
+                
+                self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['success']}'>Connected to SQLite database: {host}</span>")
+                dialog.accept()
+            else:
+                QMessageBox.information(dialog, "Coming Soon", f"{db_type} support will be added in a future update.")
+        
+        connect_btn.clicked.connect(connect)
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+    
+    # ==================== ASYNC CODE EXECUTION ====================
+    
+    def run_current_file_async(self):
+        """Run current file asynchronously"""
+        editor = self.get_current_editor()
+        if not editor:
+            QMessageBox.warning(self, "Warning", "No file open to run.")
+            return
+        
+        info = self.open_files.get(editor)
+        if not info or not info['path']:
+            reply = QMessageBox.question(
+                self,
+                "Save File",
+                "File must be saved before running. Save now?",
+                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Cancel
+            )
+            if reply == QMessageBox.StandardButton.Save:
+                self.save_file()
+                info = self.open_files.get(editor)
+                if not info or not info['path']:
+                    return
+            else:
+                return
+        
+        # Clear terminal and show running message
+        self.terminal.clear()
+        self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['primary']}; font-weight:bold'>◢ Running {info['language']} file: {os.path.basename(info['path'])} ◣</span>")
+        self.terminal.append("")
+        
+        # Run based on language asynchronously
+        self.is_running = True
+        self.update_status(f"Running {info['language']} file...", "running")
+        
+        # Create command based on language
+        cmd = ""
+        if info['language'] == 'python':
+            python_cmd = self.terminal.compiler_paths.get('python', 'python')
+            cmd = f'{python_cmd} "{info["path"]}"'
+        elif info['language'] == 'javascript':
+            if 'node' in self.terminal.compiler_paths:
+                cmd = f'node "{info["path"]}"'
+            else:
+                self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: Node.js not found</span>")
+                return
+        elif info['language'] == 'java':
+            # Compile and run Java
+            compile_cmd = f'javac "{info["path"]}"'
+            class_name = os.path.splitext(os.path.basename(info['path']))[0]
+            run_cmd = f'java -cp "{os.path.dirname(info["path"])}" {class_name}'
+            cmd = f'{compile_cmd} && {run_cmd}'
+        elif info['language'] == 'c':
+            # Compile C
+            output_name = os.path.splitext(info['path'])[0]
+            compile_cmd = f'gcc "{info["path"]}" -o "{output_name}"'
+            run_cmd = f'"{output_name}"'
+            cmd = f'{compile_cmd} && {run_cmd}'
+        elif info['language'] == 'cpp':
+            # Compile C++
+            output_name = os.path.splitext(info['path'])[0]
+            compile_cmd = f'g++ "{info["path"]}" -o "{output_name}"'
+            run_cmd = f'"{output_name}"'
+            cmd = f'{compile_cmd} && {run_cmd}'
+        elif info['language'] == 'php':
+            if 'php' in self.terminal.compiler_paths:
+                cmd = f'php "{info["path"]}"'
+            else:
+                self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: PHP not found</span>")
+                return
+        elif info['language'] == 'sql':
+            # For SQL files, use execute_sql instead
+            self.execute_sql()
+            return
+        elif info['language'] == 'html':
+            webbrowser.open(f'file://{os.path.abspath(info["path"])}')
+            self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['secondary']}'>◢ Opened in browser ◣</span>")
+            return
+        elif info['language'] == 'bash':
+            cmd = f'bash "{info["path"]}"'
+        else:
+            self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['warning']}'>Language not supported for execution</span>")
+            return
+        
+        # Run command in thread
+        if cmd:
+            self.terminal.thread_manager.run_command(cmd, os.path.dirname(info['path']), f"Running {info['language']} file")
+    
+    def run_selection_async(self):
+        """Run selected code asynchronously"""
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        
+        cursor = editor.textCursor()
+        selected_text = cursor.selectedText()
+        
+        if not selected_text:
+            QMessageBox.warning(self, "Warning", "No text selected to run.")
+            return
+        
+        # Clear terminal and show running message
+        self.terminal.clear()
+        self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['primary']}; font-weight:bold'>◢ Running selected code ◣</span>")
+        self.terminal.append("")
+        
+        # Get current language
+        info = self.open_files.get(editor)
+        language = info['language'] if info else 'python'
+        
+        # Create temporary file with selected text
+        import tempfile
+        temp_ext = {
+            'python': '.py',
+            'javascript': '.js',
+            'java': '.java',
+            'c': '.c',
+            'cpp': '.cpp',
+            'php': '.php',
+            'sql': '.sql',
+            'bash': '.sh',
+            'html': '.html',
+            'css': '.css'
+        }.get(language, '.txt')
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix=temp_ext, delete=False) as f:
+            f.write(selected_text)
+            temp_file = f.name
+        
+        # Create command based on language
+        cmd = ""
+        if language == 'python':
+            python_cmd = self.terminal.compiler_paths.get('python', 'python')
+            cmd = f'{python_cmd} "{temp_file}"'
+        elif language == 'javascript':
+            if 'node' in self.terminal.compiler_paths:
+                cmd = f'node "{temp_file}"'
+            else:
+                self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: Node.js not found</span>")
+                return
+        elif language == 'php':
+            if 'php' in self.terminal.compiler_paths:
+                cmd = f'php "{temp_file}"'
+            else:
+                self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['error']}'>Error: PHP not found</span>")
+                return
+        elif language == 'sql':
+            # For SQL, need a database
+            QMessageBox.information(self, "SQL Selection", 
+                                  "To run SQL selection, use the 'Execute SQL' command with a database.")
+            return
+        else:
+            self.terminal.append(f"<span style='color:{MODERN_GAMER_THEME['warning']}'>Language not supported for execution</span>")
+            return
+        
+        # Run command in thread
+        if cmd:
+            self.is_running = True
+            self.update_status("Running selected code...", "running")
+            self.terminal.thread_manager.run_command(cmd, os.getcwd(), "Running selected code")
+    
+    def stop_running_program(self):
+        """Stop the currently running program"""
+        self.stop_terminal_process()
+        self.is_running = False
+        self.update_status("Execution stopped", "warning")
+    
+    # ==================== VIEW FUNCTIONS ====================
+    
+    def toggle_sidebar(self):
+        sidebar = self.main_splitter.widget(0)
+        if sidebar.isVisible():
+            sidebar.hide()
+        else:
+            sidebar.show()
+    
+    def toggle_terminal(self):
+        if self.terminal_dock.isVisible():
+            self.terminal_dock.hide()
+        else:
+            self.terminal_dock.show()
+            # Focus terminal input when shown
+            QTimer.singleShot(50, lambda: self.terminal_input.setFocus())
+    
+    def increase_font_size(self):
+        editor = self.get_current_editor()
+        if editor:
+            font = editor.font()
+            size = font.pointSize()
+            font.setPointSize(size + 1)
+            editor.setFont(font)
+            self.font_size_combo.setCurrentText(str(size + 1))
+    
+    def decrease_font_size(self):
+        editor = self.get_current_editor()
+        if editor:
+            font = editor.font()
+            size = font.pointSize()
+            if size > 8:
+                font.setPointSize(size - 1)
+                editor.setFont(font)
+                self.font_size_combo.setCurrentText(str(size - 1))
+    
+    def on_font_size_changed(self, size):
+        editor = self.get_current_editor()
+        if editor:
+            font = editor.font()
+            font.setPointSize(int(size))
+            editor.setFont(font)
+    
+    # ==================== UTILITIES ====================
+    
+    def get_current_editor(self):
+        widget = self.tab_widget.currentWidget()
+        if isinstance(widget, LRDCustomEditor):
+            return widget
+        return None
+    
+    def update_clock(self):
+        current_time = datetime.now().strftime("%H:%M:%S")
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        self.time_display.setText(f"🕒 {current_date} {current_time}")
+    
+    def update_status(self, message: str, status_type: str = "ready"):
+        colors = {
+            'ready': MODERN_GAMER_THEME['status_ready'],
+            'error': MODERN_GAMER_THEME['status_error'],
+            'warning': MODERN_GAMER_THEME['status_warning'],
+            'modified': MODERN_GAMER_THEME['status_modified'],
+            'running': MODERN_GAMER_THEME['status_running']
+        }
+        
+        icons = {
+            'ready': '●',
+            'error': '⚠',
+            'warning': '⚠',
+            'modified': '✎',
+            'running': '▶'
+        }
+        
+        color = colors.get(status_type, MODERN_GAMER_THEME['status_ready'])
+        icon = icons.get(status_type, '●')
+        self.status_label.setText(f"{icon} {message}")
+        self.status_label.setStyleSheet(f"""
+            color: {color};
+            font-weight: bold;
+            padding-right: 15px;
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            font-size: 10px;
+        """)
+        self.status_indicator.setText(f"{icon} {message}")
+        self.status_indicator.setStyleSheet(f"""
+            font-size: 10px;
+            font-weight: bold;
+            color: {color};
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 8px;
+            border: 1px solid {color};
+            font-family: 'Segoe UI', 'Consolas', monospace;
+        """)
+    
+    # ==================== HELP & ABOUT ====================
+    
+    def show_documentation(self):
+        QMessageBox.information(
+            self,
+            "Documentation",
+            """◢◤ LRD CODE EDITOR - MODERN GAMER EDITION ◥◣
+
+◢ Optimized for Low-End Systems:
+• Reduced memory usage (works on 1GB RAM)
+• Works on Windows XP and older processors
+• Simplified UI for better performance
+• Sidebar icons always visible (no hover effects)
+• All features fully functional
+
+◢ Features:
+• High-performance modern code editor
+• Multi-language support with syntax highlighting (including SQL!)
+• Integrated fully typeable terminal
+• Advanced file explorer with VSCode-like features
+• Code execution for multiple languages
+• Modern UI with gaming aesthetics
+• Multi-threaded execution (won't hang)
+• Open files with default applications
+• Trash system with restore functionality
+
+◢ Enhanced File Explorer:
+• Right-click context menu with icons
+• Create new files and folders
+• Delete to trash (with restore option)
+• Permanent delete option
+• Open with default app
+• Copy file paths
+• Show properties
+• Double-click to open files/folders
+
+◢ Terminal Features:
+• ALWAYS typeable - no file needs to be open
+• Command history (Up/Down arrows)
+• Syntax colored output
+• Built-in commands: cd, ls, clear, help, history
+• Auto-detects compilers/interpreters (including SQLite)
+• Multi-threaded execution
+• Terminal input works properly!
+
+◢ SQL Support:
+• SQL syntax highlighting
+• SQL file support (.sql)
+• Execute SQL files with SQLite
+• Format SQL code
+• Database connection manager
+
+◢ Performance Optimizations:
+• Thread pool for async operations
+• Non-blocking UI during execution
+• Optimized for older processors
+• Reduced animations and effects
+• Works on Windows XP
+
+◢ Keyboard Shortcuts:
+• Ctrl+N: New file
+• Ctrl+O: Open file
+• Ctrl+E: Open folder
+• Ctrl+S: Save file
+• Ctrl+Shift+S: Save all files
+• Ctrl+W: Close tab
+• Ctrl+Tab: Next tab
+• Ctrl+Shift+Tab: Previous tab
+• F5: Run current file (async)
+• F6: Run selection (async)
+• F8: Execute SQL
+• Ctrl+.: Stop execution
+• Ctrl+F: Find
+• Ctrl+H: Replace
+• Ctrl+B: Toggle sidebar
+• Ctrl+`: Toggle terminal
+
+◢ Getting Started:
+1. Open folder (Ctrl+E) to use file explorer
+2. Create new files/folders from explorer
+3. Write your code with syntax highlighting
+4. Save file (Ctrl+S)
+5. Run code (F5) or selection (F6) - async!
+6. Use terminal for any system commands
+7. SQL files can be executed with F8
+            """
+        )
+    
+    def show_shortcuts(self):
+        shortcuts_text = f"""
+<span style='color:{MODERN_GAMER_THEME['primary']}; font-weight:bold'>⌨️ KEYBOARD SHORTCUTS</span><br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>📁 File Operations:</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+N</span> - New File<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+O</span> - Open File<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+E</span> - Open Folder<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+S</span> - Save File<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+Shift+S</span> - Save All Files<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+W</span> - Close Tab<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+Q</span> - Exit<br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>📑 Tab Navigation:</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+Tab</span> - Next Tab<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+Shift+Tab</span> - Previous Tab<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+PageUp</span> - Previous Tab<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+PageDown</span> - Next Tab<br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>✏️ Edit Operations:</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+Z</span> - Undo<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+Y</span> - Redo<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+X</span> - Cut<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+C</span> - Copy<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+V</span> - Paste<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+A</span> - Select All<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+F</span> - Find<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+H</span> - Replace<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+D</span> - Duplicate Line<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+/</span> - Toggle Comment<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+Shift+F</span> - Format Code<br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>▶️ Run Operations:</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>F5</span> - Run Current File (Async)<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>F6</span> - Run Selection (Async)<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>F8</span> - Execute SQL<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+.</span> - Stop Execution<br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>👁️ View Operations:</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+B</span> - Toggle Sidebar<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+`</span> - Toggle Terminal<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl++</span> - Increase Font<br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>Ctrl+-</span> - Decrease Font<br>
+"""
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Keyboard Shortcuts")
+        dialog.setFixedSize(400, 400)
+        
+        layout = QVBoxLayout(dialog)
+        
+        text_edit = QTextEdit()
+        text_edit.setReadOnly(True)
+        text_edit.setHtml(shortcuts_text)
+        
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(dialog.close)
+        
+        layout.addWidget(text_edit, 1)
+        layout.addWidget(close_btn)
+        
+        dialog.exec()
+    
+    def show_about(self):
+        # Create hacker-themed about dialog
+        about_dialog = QDialog(self)
+        about_dialog.setWindowTitle("◢◤ ABOUT LRD ◥◣")
+        about_dialog.setFixedSize(500, 400)
+        
+        layout = QVBoxLayout(about_dialog)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Title
+        title = QLabel("◢◤ LRD TEAM - MODERN GAMER EDITION ◥◣")
+        title.setStyleSheet(f"""
+            color: {MODERN_GAMER_THEME['primary']};
+            font-size: 16px;
+            font-weight: bold;
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            text-align: center;
+            padding: 10px;
+        """)
+        
+        # Logo
+        logo_label = QLabel()
+        try:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(script_dir, "tlogo.png")
+            if os.path.exists(icon_path):
+                pixmap = QPixmap(icon_path).scaled(80, 80)
+                logo_label.setPixmap(pixmap)
+                logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except:
+            pass
+        
+        # Hacker-themed text
+        about_text = QTextEdit()
+        about_text.setReadOnly(True)
+        
+        hacker_text = f"""
+<span style='color:{MODERN_GAMER_THEME['primary']};'>◢◤ SYSTEM INITIALIZED ◥◣</span><br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>[+] LRD DEVELOPMENT TEAM</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Founder & Lead Developer: LRD_SOUL</span><br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>[+] CONTACT INFORMATION</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Email: inscreator728@gmail.com</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • GitHub: github.com/inscreator728</span><br><br>
+
+<span style='color:{MODERN_GAMER_THEME['secondary']}'>[+] SOFTWARE SPECS</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Version: Modern Gamer Edition 4.0</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Build: 2024.12.01</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Theme: Modern JARVIS Red-Black</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Performance: Optimized for Low-End Systems</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Works on: Windows XP, 1GB RAM, Pentium Processors</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Terminal: Always Typeable & Async</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • Explorer: VSCode-like Features</span><br>
+<span style='color:{MODERN_GAMER_THEME['text_editor']}'>   • SQL Support: Full syntax highlighting & execution</span><br><br>
+
+<span style='color:{MODERN_GAMER_THEME['primary']}'>◢◤ ACCESS GRANTED - WELCOME TO LRD ◥◣</span>
+"""
+        
+        about_text.setHtml(hacker_text)
+        
+        # Close button
+        close_btn = QPushButton("CLOSE SYSTEM")
+        close_btn.clicked.connect(about_dialog.close)
+        
+        layout.addWidget(title)
+        layout.addWidget(logo_label)
+        layout.addWidget(about_text, 1)
+        layout.addWidget(close_btn)
+        
+        about_dialog.exec()
+    
+    def closeEvent(self, event):
+        # Check for unsaved changes
+        unsaved = any(info.get('modified', False) for info in self.open_files.values())
+        
+        if unsaved:
+            reply = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "You have unsaved changes. Save before exiting?",
+                QMessageBox.StandardButton.Save |
+                QMessageBox.StandardButton.Discard |
+                QMessageBox.StandardButton.Cancel
+            )
+            
+            if reply == QMessageBox.StandardButton.Save:
+                self.save_all_files()
+                event.accept()
+            elif reply == QMessageBox.StandardButton.Discard:
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.accept()
+
+# ==================== CUSTOM TERMINAL INPUT ====================
+
+class TerminalLineEdit(QLineEdit):
+    """Custom line edit for terminal input with history support"""
+    def __init__(self, terminal, parent=None):
+        super().__init__(parent)
+        self.terminal = terminal
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Up:
+            history_cmd = self.terminal.get_previous_command()
+            if history_cmd:
+                self.setText(history_cmd)
+                self.setCursorPosition(len(history_cmd))
+        elif event.key() == Qt.Key.Key_Down:
+            history_cmd = self.terminal.get_next_command()
+            self.setText(history_cmd)
+            self.setCursorPosition(len(history_cmd))
+        elif event.key() == Qt.Key.Key_Escape:
+            self.clear()
+        else:
+            # Call parent class method for normal key handling
+            super().keyPressEvent(event)
+        
+        # Ensure focus stays on input
+        self.setFocus()
+
+# ==================== APPLICATION ====================
+
+def main():
+    # Enable High DPI scaling
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
+    
+    app = QApplication(sys.argv)
+    
+    # Set application style and info
+    app.setStyle("Fusion")
+    app.setApplicationName("LRD Code Editor - Modern Gamer Edition")
+    app.setOrganizationName("LRD-TECH")
+    
+    # Set application icon
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(script_dir, "tlogo.png")
+    
+    if os.path.exists(icon_path):
+        try:
+            app.setWindowIcon(QIcon(icon_path))
+        except:
+            pass
+    
+    # Create and show main window
+    window = LRDCodeEditor()
+    window.show()
+    
+    # Start application
+    sys.exit(app.exec())
+
+if __name__ == "__main__":
+    main()
